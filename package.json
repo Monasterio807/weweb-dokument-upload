@@ -1,0 +1,14 @@
+{
+  "name": "weweb-dokument-upload",
+  "version": "1.0.0",
+  "description": "WeWeb Coded Component – Dokument-Upload für HR-Dossier (Imploya)",
+  "private": true,
+  "scripts": {
+    "build": "weweb build",
+    "serve": "weweb serve"
+  },
+  "devDependencies": {
+    "@weweb/cli": "latest"
+  },
+  "license": "UNLICENSED"
+}
