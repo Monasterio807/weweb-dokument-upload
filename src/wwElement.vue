@@ -301,7 +301,7 @@ export default {
       return String((this.content && this.content.storageBucket) || 'employee-documents');
     },
     authHeaders() {
-      const key = String((this.content && 'sb_publishable_4rsRb_VB3l_45JO7sw0VSA_ODDS4CZc') || '');
+      const key = String((this.content && this.content.apiKey) || 'sb_publishable_4rsRb_VB3l_45JO7sw0VSA_ODDS4CZc');
       const raw = String((this.content && this.content.authToken) || '');
       const bearer = raw.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
       return { apikey: key, Authorization: bearer };
