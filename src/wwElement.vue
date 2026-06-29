@@ -1055,7 +1055,7 @@ export default {
 .modal-body  { margin: 0 0 var(--hrk-space-5); }
 .modal-actions { justify-content: flex-end; }
 .modal-delete-btn { background: var(--hrk-danger); }
-.modal-delete-btn:hover { background: #8a2030; }
+.modal-delete-btn:hover { background: var(--hrk-bordeaux-dark); }
 
 /* ── Hilfsstyles btn-inner ───────────────────────────────── */
 .btn-inner { display: inline-flex; align-items: center; gap: var(--hrk-space-2); }
