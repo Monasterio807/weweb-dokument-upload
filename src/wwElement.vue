@@ -53,14 +53,42 @@
 
             <!-- Placeholder (keine Datei ausgewählt) -->
             <template v-if="!selectedFile">
-              <span class="upload-zone__icon" aria-hidden="true">📎</span>
+              <svg class="hrk-icon hrk-icon--lg upload-zone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M17 7 L9.5 14.5 a3 3 0 1 0 4.24 4.24 L20.5 12" />
+                <path d="M17 7 a3 3 0 0 0 -4.24 0 L6 13.76 a5 5 0 1 0 7.07 7.07" />
+              </svg>
               <p class="upload-zone__text">Hier klicken oder Datei reinziehen</p>
               <p class="hrk-muted upload-zone__hint">PDF, JPG, PNG oder DOCX — max. 10 MB</p>
             </template>
 
             <!-- Datei ausgewählt -->
             <template v-else>
-              <span class="upload-zone__icon" aria-hidden="true">{{ fileIcon }}</span>
+              <!-- PDF -->
+              <svg v-if="fileIconKind === 'pdf'" class="hrk-icon hrk-icon--lg upload-zone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 3 h9 l4 4 v14 h-13 z" />
+                <polyline points="15 3 15 7 19 7" />
+                <line x1="8.5" y1="13" x2="15.5" y2="13" />
+                <line x1="8.5" y1="16.5" x2="13" y2="16.5" />
+              </svg>
+              <!-- Bild -->
+              <svg v-else-if="fileIconKind === 'image'" class="hrk-icon hrk-icon--lg upload-zone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+                <circle cx="9" cy="10" r="1.7" />
+                <polyline points="4.5 16.5 9.5 12.5 13.5 15.5 16 13 19.5 16.5" />
+              </svg>
+              <!-- Word/Dokument -->
+              <svg v-else-if="fileIconKind === 'word'" class="hrk-icon hrk-icon--lg upload-zone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 3 h9 l4 4 v14 h-13 z" />
+                <polyline points="15 3 15 7 19 7" />
+                <line x1="8.5" y1="12" x2="15.5" y2="12" />
+                <line x1="8.5" y1="15.5" x2="15.5" y2="15.5" />
+                <line x1="8.5" y1="19" x2="12" y2="19" />
+              </svg>
+              <!-- generisch -->
+              <svg v-else class="hrk-icon hrk-icon--lg upload-zone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 3 h9 l4 4 v14 h-13 z" />
+                <polyline points="15 3 15 7 19 7" />
+              </svg>
               <div class="upload-zone__file-info">
                 <p class="upload-zone__file-name">{{ selectedFile.name }}</p>
                 <p class="hrk-muted">{{ fmtSize(selectedFile.size) }}</p>
@@ -69,7 +97,12 @@
                 class="upload-zone__clear hrk-btn hrk-btn--ghost"
                 aria-label="Datei entfernen"
                 @click.stop="clearFile"
-              >✕</button>
+              >
+                <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                </svg>
+              </button>
             </template>
           </div>
 
@@ -95,11 +128,21 @@
           </div>
 
           <!-- Auto-Verarbeitung Hinweis (sichtbar wenn Datei ausgewählt) -->
-          <div v-if="isArbeitsvertrag && selectedFile" class="hrk-note hrk-note--info">
-            <strong>🤖 Emily ist aktiv</strong> — nach dem Hochladen liest Emily den Vertrag automatisch und legt den Mitarbeiter an.
+          <div v-if="isArbeitsvertrag && selectedFile" class="hrk-note hrk-note--info hrk-note--icon">
+            <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <line x1="12" y1="7.5" x2="12" y2="13" />
+              <circle cx="12" cy="16.3" r="0.15" fill="currentColor" stroke-width="2.4" />
+            </svg>
+            <span><strong>Emily ist aktiv</strong> — nach dem Hochladen liest Emily den Vertrag automatisch und legt den Mitarbeiter an.</span>
           </div>
-          <div v-else-if="insuranceType && selectedFile" class="hrk-note hrk-note--info">
-            <strong>🤖 Emily ist aktiv</strong> — nach dem Hochladen extrahiert Emily die Versicherungsdaten direkt in dein Betriebsprofil.
+          <div v-else-if="insuranceType && selectedFile" class="hrk-note hrk-note--info hrk-note--icon">
+            <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <line x1="12" y1="7.5" x2="12" y2="13" />
+              <circle cx="12" cy="16.3" r="0.15" fill="currentColor" stroke-width="2.4" />
+            </svg>
+            <span><strong>Emily ist aktiv</strong> — nach dem Hochladen extrahiert Emily die Versicherungsdaten direkt in dein Betriebsprofil.</span>
           </div>
 
           <!-- Meldungen Upload -->
@@ -117,15 +160,26 @@
 
           <!-- Auto-Import Ergebnis -->
           <div v-if="importResult" class="hrk-card auto-result-card">
-            <p class="auto-result-card__title">
-              ✅ Mitarbeiter {{ importResult.employee_created ? 'angelegt' : 'aktualisiert' }}
+            <p class="auto-result-card__title auto-result-card__title--icon">
+              <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <polyline points="8 12.5 11 15.5 16 9.5" />
+              </svg>
+              Mitarbeiter {{ importResult.employee_created ? 'angelegt' : 'aktualisiert' }}
             </p>
             <p v-if="importResult.employee_created" class="hrk-muted hrk-small">
               Onboarding-Checkliste gestartet.
               <template v-if="importResult.case_id"> Vertragsentwurf erstellt.</template>
             </p>
             <ul v-if="importResult.warnings && importResult.warnings.length" class="auto-result-card__warnings">
-              <li v-for="w in importResult.warnings" :key="w" class="hrk-muted hrk-small">⚠ {{ w }}</li>
+              <li v-for="w in importResult.warnings" :key="w" class="hrk-muted hrk-small auto-result-card__warning-item">
+                <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polygon points="12 3.5 21.5 20 2.5 20" />
+                  <line x1="12" y1="9.5" x2="12" y2="14" />
+                  <circle cx="12" cy="17" r="0.15" fill="currentColor" stroke-width="2.2" />
+                </svg>
+                {{ w }}
+              </li>
             </ul>
             <div v-if="importResult.employee_id" class="hrk-actions" style="margin-top:12px">
               <a :href="`/mitarbeiter/${importResult.employee_id}`" class="hrk-btn hrk-btn--secondary">Mitarbeiter öffnen →</a>
@@ -143,12 +197,25 @@
 
           <!-- Versicherungs-Extraktion Ergebnis -->
           <div v-if="extractResult" class="hrk-card auto-result-card">
-            <p class="auto-result-card__title">✅ Versicherungsdaten gespeichert</p>
+            <p class="auto-result-card__title auto-result-card__title--icon">
+              <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <polyline points="8 12.5 11 15.5 16 9.5" />
+              </svg>
+              Versicherungsdaten gespeichert
+            </p>
             <ul v-if="extractResult.updated_fields && extractResult.updated_fields.length" class="auto-result-card__fields">
               <li v-for="f in extractResult.updated_fields" :key="f" class="hrk-small">• {{ f }}</li>
             </ul>
             <ul v-if="extractResult.warnings && extractResult.warnings.length" class="auto-result-card__warnings">
-              <li v-for="w in extractResult.warnings" :key="w" class="hrk-muted hrk-small">⚠ {{ w }}</li>
+              <li v-for="w in extractResult.warnings" :key="w" class="hrk-muted hrk-small auto-result-card__warning-item">
+                <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polygon points="12 3.5 21.5 20 2.5 20" />
+                  <line x1="12" y1="9.5" x2="12" y2="14" />
+                  <circle cx="12" cy="17" r="0.15" fill="currentColor" stroke-width="2.2" />
+                </svg>
+                {{ w }}
+              </li>
             </ul>
           </div>
 
@@ -186,7 +253,32 @@
 
           <ul v-else class="doc-list" role="list">
             <li v-for="doc in documents" :key="doc.id" class="doc-item">
-              <span class="doc-item__icon" aria-hidden="true">{{ docIcon(doc.mime_type) }}</span>
+              <!-- PDF -->
+              <svg v-if="docIconKind(doc.mime_type) === 'pdf'" class="hrk-icon hrk-icon--lg doc-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 3 h9 l4 4 v14 h-13 z" />
+                <polyline points="15 3 15 7 19 7" />
+                <line x1="8.5" y1="13" x2="15.5" y2="13" />
+                <line x1="8.5" y1="16.5" x2="13" y2="16.5" />
+              </svg>
+              <!-- Bild -->
+              <svg v-else-if="docIconKind(doc.mime_type) === 'image'" class="hrk-icon hrk-icon--lg doc-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+                <circle cx="9" cy="10" r="1.7" />
+                <polyline points="4.5 16.5 9.5 12.5 13.5 15.5 16 13 19.5 16.5" />
+              </svg>
+              <!-- Word/Dokument -->
+              <svg v-else-if="docIconKind(doc.mime_type) === 'word'" class="hrk-icon hrk-icon--lg doc-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 3 h9 l4 4 v14 h-13 z" />
+                <polyline points="15 3 15 7 19 7" />
+                <line x1="8.5" y1="12" x2="15.5" y2="12" />
+                <line x1="8.5" y1="15.5" x2="15.5" y2="15.5" />
+                <line x1="8.5" y1="19" x2="12" y2="19" />
+              </svg>
+              <!-- generisch -->
+              <svg v-else class="hrk-icon hrk-icon--lg doc-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 3 h9 l4 4 v14 h-13 z" />
+                <polyline points="15 3 15 7 19 7" />
+              </svg>
               <div class="doc-item__body">
                 <p class="doc-item__name">{{ doc.file_name }}</p>
                 <p class="doc-item__meta hrk-muted hrk-small">
@@ -203,7 +295,11 @@
                   @click="downloadFile(doc)"
                 >
                   <span v-if="downloading === doc.id" class="btn-spinner btn-spinner--sm" aria-hidden="true"></span>
-                  <span v-else aria-hidden="true">⬇</span>
+                  <svg v-else class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="12" y1="4" x2="12" y2="15" />
+                    <polyline points="7.5 11 12 15.5 16.5 11" />
+                    <line x1="5" y1="19.5" x2="19" y2="19.5" />
+                  </svg>
                 </button>
                 <button
                   class="hrk-btn hrk-btn--ghost doc-btn doc-btn--delete"
@@ -212,7 +308,13 @@
                   @click="confirmDelete(doc)"
                 >
                   <span v-if="deleting === doc.id" class="btn-spinner btn-spinner--sm" aria-hidden="true"></span>
-                  <span v-else aria-hidden="true">🗑</span>
+                  <svg v-else class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="5" y1="7" x2="19" y2="7" />
+                    <path d="M9 7 V5 a1 1 0 0 1 1 -1 h4 a1 1 0 0 1 1 1 v2" />
+                    <path d="M7 7 l1 13 a1.5 1.5 0 0 0 1.5 1.4 h5 a1.5 1.5 0 0 0 1.5 -1.4 l1 -13" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
                 </button>
               </div>
             </li>
@@ -320,8 +422,9 @@ export default {
         return String(payload.sub || '');
       } catch (e) { return ''; }
     },
-    fileIcon() {
-      return this.selectedFile ? this.docIcon(this.selectedFile.type) : '📎';
+    /** Icon-Art ('pdf'|'image'|'word'|'generic') fuer die gewaehlte Datei */
+    fileIconKind() {
+      return this.selectedFile ? this.docIconKind(this.selectedFile.type) : 'generic';
     },
     /** True wenn gewählte Kategorie ein Arbeitsvertrag ist */
     isArbeitsvertrag() {
@@ -371,12 +474,13 @@ export default {
 
     // ── Hilfsfunktionen ──────────────────────────────────────────────────────
 
-    docIcon(mime) {
-      if (!mime) return '📄';
-      if (mime.includes('pdf'))               return '📋';
-      if (mime.includes('image'))             return '🖼';
-      if (mime.includes('word') || mime.includes('document')) return '📝';
-      return '📄';
+    /** Icon-Art ('pdf'|'image'|'word'|'generic') je nach MIME-Typ */
+    docIconKind(mime) {
+      if (!mime) return 'generic';
+      if (mime.includes('pdf'))               return 'pdf';
+      if (mime.includes('image'))             return 'image';
+      if (mime.includes('word') || mime.includes('document')) return 'word';
+      return 'generic';
     },
 
     fmtSize(bytes) {
@@ -844,6 +948,9 @@ export default {
   --hrk-focus-ring:  0 0 0 3px rgba(123,45,59,.30);
   --hrk-tap-min: 44px;
   --hrk-page-max: 680px;
+  --hrk-icon-size-sm: 16px;
+  --hrk-icon-size-md: 20px;
+  --hrk-icon-size-lg: 28px;
 }
 
 /* ── Basis ───────────────────────────────────────────────── */
@@ -923,6 +1030,14 @@ export default {
 }
 .hrk-note--warn    { border-color: var(--hrk-warning); background: var(--hrk-warning-bg); }
 .hrk-note--success { border-color: var(--hrk-success); background: var(--hrk-success-bg); }
+.hrk-note--info    { border-color: var(--hrk-info); background: var(--hrk-info-bg); }
+.hrk-note--icon    { display: flex; align-items: flex-start; gap: var(--hrk-space-2); white-space: normal; }
+.hrk-note--icon .hrk-icon { margin-top: 2px; color: var(--hrk-info); }
+
+/* ── Icons (Design-System) ──────────────────────────────── */
+.hrk-icon { width: var(--hrk-icon-size-md); height: var(--hrk-icon-size-md); flex: none; }
+.hrk-icon--sm { width: var(--hrk-icon-size-sm); height: var(--hrk-icon-size-sm); }
+.hrk-icon--lg { width: var(--hrk-icon-size-lg); height: var(--hrk-icon-size-lg); }
 
 /* ── Badge ───────────────────────────────────────────────── */
 .hrk-badge {
@@ -1008,7 +1123,7 @@ export default {
   opacity: 0; cursor: pointer; z-index: 1;
 }
 .upload-zone--has-file .upload-zone__input { display: none; }
-.upload-zone__icon { font-size: 2rem; line-height: 1; }
+.upload-zone__icon { width: 2rem; height: 2rem; color: var(--hrk-bordeaux); }
 .upload-zone__text { font-weight: var(--hrk-fw-semibold); margin: 0; }
 .upload-zone__hint { font-size: var(--hrk-fs-small); margin: 0; }
 .upload-zone__file-info { flex: 1 1 auto; min-width: 0; }
@@ -1029,7 +1144,7 @@ export default {
   border: 1px solid var(--hrk-border); border-radius: var(--hrk-radius-md);
   background: var(--hrk-surface);
 }
-.doc-item__icon { font-size: 1.4rem; flex: none; }
+.doc-item__icon { width: 1.4rem; height: 1.4rem; flex: none; color: var(--hrk-text-muted); }
 .doc-item__body { flex: 1 1 auto; min-width: 0; }
 .doc-item__name { font-weight: var(--hrk-fw-semibold); margin: 0 0 var(--hrk-space-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .doc-item__meta { margin: 0; }
@@ -1073,6 +1188,10 @@ export default {
   margin: 0 0 var(--hrk-space-2);
   font-size: var(--hrk-fs-body);
 }
+.auto-result-card__title--icon { display: flex; align-items: center; gap: var(--hrk-space-2); }
+.auto-result-card__title--icon .hrk-icon { color: var(--hrk-success); }
+.auto-result-card__warning-item { display: flex; align-items: flex-start; gap: var(--hrk-space-2); }
+.auto-result-card__warning-item .hrk-icon { margin-top: 1px; color: var(--hrk-warning); }
 .auto-result-card__warnings,
 .auto-result-card__fields {
   list-style: none;
