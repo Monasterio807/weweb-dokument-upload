@@ -20,7 +20,7 @@ export default {
     },
     apiKey: {
       label: { en: 'Supabase anon/publishable key', de: 'Supabase Anon-/Publishable-Key' },
-      type: 'Text', section: 'settings', bindable: true, defaultValue: '',
+      type: 'Text', section: 'settings', bindable: true, defaultValue: 'sb_publishable_4rsRb_VB3l_45JO7sw0VSA_ODDS4CZc',
       /* wwEditor:start */
       bindingValidation: { type: 'string', tooltip: 'Öffentlicher Anon-Key. NIE den service_role-Key verwenden.' },
       /* wwEditor:end */

@@ -395,15 +395,15 @@ export default {
 
   computed: {
     baseUrl() {
-      let __sbBase = String((this.content && this.content.supabaseUrl) || 'https://ztvqsxdudzdyqgeylujr.supabase.co').replace(/\/+$/, '');
-      if (/nemxnflngcfrpamkuesm/.test(String(__sbBase))) __sbBase = 'https://ztvqsxdudzdyqgeylujr.supabase.co';
+      let __sbBase = String((this.content && this.content.supabaseUrl) || '').replace(/\/+$/, '');
+      if (/nemxnflngcfrpamkuesm/.test(String(__sbBase))) __sbBase = '';
       return __sbBase;
     },
     bucket() {
       return String((this.content && this.content.storageBucket) || 'employee-documents');
     },
     authHeaders() {
-      const key = String((this.content && this.content.apiKey) || 'sb_publishable_4rsRb_VB3l_45JO7sw0VSA_ODDS4CZc');
+      const key = String((this.content && this.content.apiKey) || '');
       const raw = String((this.content && this.content.authToken) || '');
       const bearer = raw.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
       return { apikey: key, Authorization: bearer };
@@ -443,7 +443,7 @@ export default {
   },
 
   mounted() {
-    if (this.content && this.content.authToken && 'sb_publishable_4rsRb_VB3l_45JO7sw0VSA_ODDS4CZc') this.init();
+    if (this.content && this.content.authToken && this.content.apiKey) this.init();
     else if (!(this.content && this.content.authToken)) this.needLogin = true;
   },
 
