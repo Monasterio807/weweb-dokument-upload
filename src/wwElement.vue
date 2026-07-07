@@ -947,6 +947,7 @@ export default {
   --hrk-shadow-pop:  0 8px 28px rgba(40,35,30,.12);
   --hrk-focus-ring:  0 0 0 3px rgba(123,45,59,.30);
   --hrk-tap-min: 44px;
+  --hrk-overlay: rgba(0,0,0,.55);
   --hrk-page-max: 680px;
   --hrk-icon-size-sm: 16px;
   --hrk-icon-size-md: 20px;
@@ -1158,7 +1159,7 @@ export default {
 /* ── Modal ───────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 200;
-  background: rgba(43,43,43,.45);
+  background: var(--hrk-overlay, rgba(43,43,43,.45));
   display: flex; align-items: center; justify-content: center;
   padding: var(--hrk-space-4);
 }
