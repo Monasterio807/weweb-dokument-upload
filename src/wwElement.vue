@@ -205,7 +205,7 @@
               Versicherungsdaten gespeichert
             </p>
             <ul v-if="extractResult.updated_fields && extractResult.updated_fields.length" class="auto-result-card__fields">
-              <li v-for="f in extractResult.updated_fields" :key="f" class="hrk-small">• {{ f }}</li>
+              <li v-for="f in extractResult.updated_fields" :key="f" class="hrk-small">• {{ fieldLabel(f) }}</li>
             </ul>
             <ul v-if="extractResult.warnings && extractResult.warnings.length" class="auto-result-card__warnings">
               <li v-for="w in extractResult.warnings" :key="w" class="hrk-muted hrk-small auto-result-card__warning-item">
@@ -614,10 +614,10 @@ export default {
           const msg = String((errBody && (errBody.message || errBody.error)) || `HTTP ${uploadRes.status}`);
           if (/bucket not found|bucket/i.test(msg)) {
             this.uploadError =
-              `Der Speicher-Bucket «${this.bucket}» existiert noch nicht.\n` +
-              'Bitte lege ihn in Supabase → Storage → New bucket an (Typ: Private, Limit: 10 MB).';
+              'Der Dokumenten-Speicher ist noch nicht bereit. ' +
+              'Bitte versuch es später nochmal oder melde dich kurz beim Imploya-Support.';
           } else {
-            this.uploadError = `Upload fehlgeschlagen: ${msg}`;
+            this.uploadError = 'Der Upload hat nicht geklappt. Bitte versuch es nochmal.';
           }
           this.emitEvent('error', { reason: 'upload', detail: msg });
           return;
@@ -650,7 +650,7 @@ export default {
         let insertedDocId = null;
         if (!dbRes.ok) {
           // Upload erfolgreich, aber Metadaten-Insert fehlgeschlagen
-          this.uploadSuccess = `Datei hochgeladen — Metadaten konnten nicht gespeichert werden (${dbRes.status}).`;
+          this.uploadSuccess = 'Die Datei ist hochgeladen, erscheint aber noch nicht in der Liste. Lade die Seite neu — dann siehst du sie.';
         } else {
           const inserted = await dbRes.json().catch(() => []);
           insertedDocId = Array.isArray(inserted) && inserted[0] ? inserted[0].id : null;
@@ -845,7 +845,7 @@ export default {
           }
         } else {
           const msg = String((body && (body.error || body.message)) || `HTTP ${res.status}`);
-          this.importError = `Automatischer Import fehlgeschlagen: ${msg}`;
+          this.importError = 'Der automatische Import hat nicht geklappt. Du kannst die Person von Hand erfassen — das Dokument ist gespeichert.';
         }
       } catch (e) {
         if (e && e.name === 'AbortError') {
@@ -856,6 +856,26 @@ export default {
       } finally {
         this.importLoading = false;
       }
+    },
+
+    /**
+     * DB-Spaltennamen aus extract-insurance-data auf lesbare Labels mappen.
+     * @param {string} f — roher Spaltenname (z.B. 'ktg_versicherer')
+     * @returns {string} lesbares Label
+     */
+    fieldLabel(f) {
+      const labels = {
+        ktg_versicherer: 'Versicherer (KTG)',
+        ktg_police_nr:   'Police-Nr. (KTG)',
+        ktg_pct:         'Prämiensatz (KTG)',
+        uvg_versicherer: 'Versicherer (UVG)',
+        uvg_police_nr:   'Police-Nr. (UVG)',
+        nbu_pct:         'Prämiensatz (NBU)',
+        bvg_versicherer: 'Versicherer (BVG)',
+        bvg_police_nr:   'Police-Nr. (BVG)',
+        bvg_pct:         'Beitragssatz (BVG)',
+      };
+      return labels[f] || f;
     },
 
     /**
@@ -892,7 +912,7 @@ export default {
           });
         } else {
           const msg = String((body && (body.error || body.message)) || `HTTP ${res.status}`);
-          this.extractError = `Extraktion fehlgeschlagen: ${msg}`;
+          this.extractError = 'Das Auslesen hat nicht geklappt. Du kannst die Angaben unter «Mein Betrieb» von Hand eintragen — das Dokument ist gespeichert.';
         }
       } catch (e) {
         if (e && e.name === 'AbortError') {
