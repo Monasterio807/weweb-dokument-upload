@@ -945,6 +945,7 @@ export default {
   --hrk-border-strong:   #DAD2C6;
   --hrk-text:            #2B2B2B;
   --hrk-text-muted:      #6B6357;
+  --hrk-on-primary:     #FFFFFF;  /* Textfarbe auf Bordeaux-Buttons (Audit-Fix) */
   --hrk-success:         #2E7D5B;  --hrk-success-bg: #E5F1EB;
   --hrk-warning:         #B7791F;  --hrk-warning-bg: #FBF1DD;
   --hrk-danger:          #B23A48;  --hrk-danger-bg:  #F8E7E9;
