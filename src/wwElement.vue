@@ -402,9 +402,34 @@ export default {
     bucket() {
       return String((this.content && this.content.storageBucket) || 'employee-documents');
     },
+    // Token LIVE lesen: zuerst Property (WeWeb-Binding), sonst WeWeb-Auth-Kontext,
+    // sonst persistierte Supabase-Session. Das Prop-Binding hinkt nach Login/Refresh
+    // hinterher — so senden wir immer den frischen User-JWT (Muster: vertrag-erstellen).
+    tokenRaw() {
+      const fromProp = ((this.content && this.content.authToken) || '').toString().trim();
+      if (fromProp) return fromProp;
+      try {
+        const auth = (typeof wwLib !== 'undefined' && wwLib.globalContext && wwLib.globalContext.auth) ? wwLib.globalContext.auth : null;
+        const at = auth && auth.session && auth.session.access_token;
+        if (at) return String(at).trim();
+      } catch (e) { /* ignore */ }
+      try {
+        const win = (typeof wwLib !== 'undefined' && wwLib.getFrontWindow) ? wwLib.getFrontWindow() : (typeof window !== 'undefined' ? window : null);
+        const ls = win && win.localStorage;
+        if (ls) {
+          const raw = ls.getItem('sb-ztvqsxdudzdyqgeylujr-auth-token');
+          if (raw) {
+            const o = JSON.parse(raw);
+            const at = (o && o.access_token) || (o && o.currentSession && o.currentSession.access_token);
+            if (at) return String(at).trim();
+          }
+        }
+      } catch (e) { /* ignore */ }
+      return '';
+    },
     authHeaders() {
       const key = String((this.content && this.content.apiKey) || '');
-      const raw = String((this.content && this.content.authToken) || '');
+      const raw = this.tokenRaw;
       const bearer = raw.startsWith('Bearer ') ? raw : `Bearer ${raw}`;
       return { apikey: key, Authorization: bearer };
     },
@@ -413,7 +438,7 @@ export default {
     },
     /** User-ID aus JWT-Payload (sub) */
     userId() {
-      const raw = String((this.content && this.content.authToken) || '');
+      const raw = this.tokenRaw;
       const jwt = raw.startsWith('Bearer ') ? raw.slice(7) : raw;
       if (!jwt) return '';
       try {
@@ -443,8 +468,8 @@ export default {
   },
 
   mounted() {
-    if (this.content && this.content.authToken && this.content.apiKey) this.init();
-    else if (!(this.content && this.content.authToken)) this.needLogin = true;
+    if (this.tokenRaw && this.content && this.content.apiKey) this.init();
+    else if (!this.tokenRaw) this.needLogin = true;
   },
 
   methods: {
@@ -468,8 +493,55 @@ export default {
 
     init() {
       this.needLogin = false;
-      if (!(this.content && this.content.authToken)) { this.needLogin = true; return; }
+      if (!this.tokenRaw) { this.needLogin = true; return; }
       this.loadFiles();
+    },
+
+    // Bei 401 das Supabase-Token via GoTrue (refresh_token) erneuern.
+    // Das WeWeb-Plugin refresht nicht automatisch (Session läuft nach 1h ab).
+    // Gibt den frischen access_token zurück (oder '') und schreibt die Session zurück.
+    async _refreshAuthToken() {
+      try {
+        const auth = (typeof wwLib !== 'undefined' && wwLib.globalContext && wwLib.globalContext.auth) ? wwLib.globalContext.auth : null;
+        const rt = auth && auth.session && auth.session.refresh_token;
+        const apiKey = (this.content && this.content.apiKey) || '';
+        if (!rt || !apiKey) return '';
+        const res = await this.fetchWithTimeout(`${this.baseUrl}/auth/v1/token?grant_type=refresh_token`, {
+          method: 'POST', headers: { apikey: apiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: rt }),
+        });
+        if (!res.ok) return '';
+        const ns = await res.json();
+        if (!ns || !ns.access_token) return '';
+        try {
+          const win = (typeof wwLib !== 'undefined' && wwLib.getFrontWindow) ? wwLib.getFrontWindow() : (typeof window !== 'undefined' ? window : null);
+          const ls = win && win.localStorage;
+          const wwSess = { access_token: ns.access_token, token_type: ns.token_type, expires_in: ns.expires_in, expires_at: ns.expires_at, refresh_token: ns.refresh_token };
+          if (ls) {
+            ls.setItem('ww-auth-session', JSON.stringify(wwSess));
+            const ref = ((String(this.baseUrl || '').match(/https?:\/\/([a-z0-9]+)\.supabase\.co/i) || [])[1]) || 'ztvqsxdudzdyqgeylujr';
+            const k = `sb-${ref}-auth-token`; const cur = JSON.parse(ls.getItem(k) || '{}');
+            ls.setItem(k, JSON.stringify(Object.assign(cur, wwSess, { user: ns.user || cur.user })));
+          }
+          if (auth && auth.session) Object.assign(auth.session, wwSess);
+        } catch (e) { /* writeback best-effort */ }
+        return ns.access_token;
+      } catch (e) { return ''; }
+    },
+
+    /** Zentraler Fetch für authentifizierte Requests: bei 401 Token EINMAL
+     *  erneuern und denselben Request mit frischem Bearer wiederholen. */
+    async authedFetch(url, options, ms) {
+      const opts = options || {};
+      let res = await this.fetchWithTimeout(url, opts, ms);
+      if (res.status === 401) {
+        const fresh = await this._refreshAuthToken();
+        if (fresh) {
+          const headers = { ...(opts.headers || {}), Authorization: `Bearer ${fresh}` };
+          res = await this.fetchWithTimeout(url, { ...opts, headers }, ms);
+        }
+      }
+      return res;
     },
 
     // ── Hilfsfunktionen ──────────────────────────────────────────────────────
@@ -594,7 +666,7 @@ export default {
 
         // 1) Datei in Supabase Storage hochladen
         const uploadUrl = `${this.baseUrl}/storage/v1/object/${encodeURIComponent(this.bucket)}/${filePath}`;
-        const uploadRes = await this.fetchWithTimeout(
+        const uploadRes = await this.authedFetch(
           uploadUrl,
           {
             method: 'POST',
@@ -633,7 +705,7 @@ export default {
           category:         this.category,
         };
         // Prefer: return=representation → gibt die neue Zeile mit ID zurück
-        const dbRes = await this.fetchWithTimeout(
+        const dbRes = await this.authedFetch(
           `${this.baseUrl}/rest/v1/employee_documents`,
           {
             method:  'POST',
@@ -692,7 +764,7 @@ export default {
       this.listError = '';
       try {
         const url = `${this.baseUrl}/rest/v1/employee_documents?select=*&order=uploaded_at.desc`;
-        const res = await this.fetchWithTimeout(url, {
+        const res = await this.authedFetch(url, {
           headers: { ...this.authHeaders, Accept: 'application/json' },
         });
         if (res.status === 401 || res.status === 403) { this.needLogin = true; return; }
@@ -716,7 +788,7 @@ export default {
       this.downloading = doc.id;
       try {
         // Signed URL generieren (1 Stunde gültig)
-        const signRes = await this.fetchWithTimeout(
+        const signRes = await this.authedFetch(
           `${this.baseUrl}/storage/v1/object/sign/${encodeURIComponent(this.bucket)}/${doc.file_path}`,
           {
             method:  'POST',
@@ -754,7 +826,7 @@ export default {
       this.deleting = doc.id;
       try {
         // 1) Datei aus Storage löschen
-        await this.fetchWithTimeout(
+        await this.authedFetch(
           `${this.baseUrl}/storage/v1/object/${encodeURIComponent(this.bucket)}`,
           {
             method:  'DELETE',
@@ -764,7 +836,7 @@ export default {
         ).catch(() => null);  // Fehler beim Storage-Delete nicht blockieren
 
         // 2) Metadaten aus DB löschen (RLS stellt sicher: nur eigene Zeilen)
-        const dbRes = await this.fetchWithTimeout(
+        const dbRes = await this.authedFetch(
           `${this.baseUrl}/rest/v1/employee_documents?id=eq.${encodeURIComponent(doc.id)}`,
           {
             method:  'DELETE',
@@ -812,7 +884,7 @@ export default {
       this.importResult = null;
       try {
         const file_base64 = await this.fileToBase64(file);
-        const res = await this.fetchWithTimeout(
+        const res = await this.authedFetch(
           `${this.baseUrl}/functions/v1/import-contract-employee`,
           {
             method: 'POST',
@@ -834,7 +906,7 @@ export default {
           });
           // Dokument mit neuem Mitarbeiter verknüpfen
           if (docId && body.employee_id) {
-            this.fetchWithTimeout(
+            this.authedFetch(
               `${this.baseUrl}/rest/v1/employee_documents?id=eq.${encodeURIComponent(docId)}`,
               {
                 method: 'PATCH',
@@ -890,7 +962,7 @@ export default {
       this.extractResult = null;
       try {
         const file_base64 = await this.fileToBase64(file);
-        const res = await this.fetchWithTimeout(
+        const res = await this.authedFetch(
           `${this.baseUrl}/functions/v1/extract-insurance-data`,
           {
             method: 'POST',
