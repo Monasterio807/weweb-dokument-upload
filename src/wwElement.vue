@@ -978,6 +978,7 @@ export default {
 /* ── Basis ───────────────────────────────────────────────── */
 .hrk-root, .hrk-root * { box-sizing: border-box; }
 .hrk-root {
+  width: 100%; /* volle Breite im WeWeb-Flex-Parent (sonst klebt der Inhalt links) */
   font-family: var(--hrk-font-body);
   font-size: var(--hrk-fs-body);
   line-height: var(--hrk-lh-body);
@@ -1084,7 +1085,7 @@ export default {
 .btn-spinner {
   display: inline-block; width: 16px; height: 16px;
   border: 2px solid rgba(255,255,255,.4);
-  border-top-color: #fff;
+  border-top-color: var(--hrk-on-primary);
   border-radius: 50%;
   animation: hrk-spin .8s linear infinite;
 }
