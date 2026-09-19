@@ -824,16 +824,21 @@ export default {
     async deleteFile(doc) {
       this.deleteTarget = null;
       this.deleting = doc.id;
+      this.uploadError = '';
       try {
-        // 1) Datei aus Storage löschen
-        await this.authedFetch(
+        // 1) Datei aus Storage löschen. Silent-Failure-Audit 19.09.2026: Fehler hier
+        // blieb bisher komplett unsichtbar — die Datei (ggf. Ausweis, Arztzeugnis)
+        // bleibt dann physisch im Bucket stehen, auch wenn der DB-Eintrag verschwindet.
+        const storageRes = await this.authedFetch(
           `${this.baseUrl}/storage/v1/object/${encodeURIComponent(this.bucket)}`,
           {
             method:  'DELETE',
             headers: { ...this.authHeaders, 'Content-Type': 'application/json' },
             body:    JSON.stringify({ prefixes: [doc.file_path] }),
           }
-        ).catch(() => null);  // Fehler beim Storage-Delete nicht blockieren
+        ).catch(() => null);
+        const storageFailed = !storageRes || !storageRes.ok;
+        if (storageFailed) console.error('[dokument-upload] Storage-Delete fehlgeschlagen:', doc.file_path, storageRes && storageRes.status);
 
         // 2) Metadaten aus DB löschen (RLS stellt sicher: nur eigene Zeilen)
         const dbRes = await this.authedFetch(
@@ -846,9 +851,15 @@ export default {
         if (dbRes.ok || dbRes.status === 404) {
           this.documents = this.documents.filter(d => d.id !== doc.id);
           this.emitEvent('deleted', { id: doc.id });
+          // Metadaten sind weg, aber die Datei liegt evtl. noch im Storage — das
+          // muss sichtbar sein, sonst wirkt "gelöscht" vollständiger als es ist.
+          if (storageFailed) this.uploadError = 'Dokument aus der Liste entfernt, aber die Datei selbst konnte nicht vollständig gelöscht werden. Bitte Richard/Support Bescheid geben.';
+        } else {
+          console.error('[dokument-upload] DB-Delete fehlgeschlagen:', doc.id, dbRes.status);
+          this.uploadError = 'Löschen hat nicht geklappt. Bitte versuch es nochmal.';
         }
       } catch (e) {
-        // Stilles Scheitern
+        this.uploadError = 'Löschen hat nicht geklappt. Bitte versuch es nochmal.';
       } finally {
         this.deleting = null;
       }
