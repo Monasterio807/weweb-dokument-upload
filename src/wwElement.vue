@@ -182,7 +182,7 @@
               </li>
             </ul>
             <div v-if="importResult.employee_id" class="hrk-actions" style="margin-top:12px">
-              <a :href="`/mitarbeiter/${importResult.employee_id}`" class="hrk-btn hrk-btn--secondary">Mitarbeiter öffnen →</a>
+              <a :href="`/mitarbeiter-detail?id=${importResult.employee_id}`" class="hrk-btn hrk-btn--secondary">Mitarbeiter öffnen →</a>
             </div>
           </div>
 
