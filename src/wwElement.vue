@@ -20,7 +20,7 @@
         <!-- Header -->
         <header class="upload-header">
           <h1 class="hrk-h1">Dokumente</h1>
-          <a v-if="backHref" class="hrk-btn hrk-btn--ghost" :href="backHref">← Zurück</a>
+          <a v-if="backHref" class="hrk-btn hrk-btn--ghost" :href="backHref">Zurück</a>
         </header>
 
         <!-- ── Upload-Karte ── -->
@@ -111,12 +111,12 @@
             <label class="hrk-label" for="doc-category">Kategorie</label>
             <select id="doc-category" v-model="category" class="hrk-input hrk-select">
               <optgroup label="Verträge &amp; Personal">
-                <option value="Arbeitsvertrag">Arbeitsvertrag ✨ Auto-Import</option>
+                <option value="Arbeitsvertrag">Arbeitsvertrag · Auto-Import</option>
                 <option value="Ausweiskopie">Ausweiskopie</option>
                 <option value="Zeugnis">Zeugnis</option>
                 <option value="Lohnabrechnung">Lohnabrechnung</option>
               </optgroup>
-              <optgroup label="Versicherungspolicen ✨ Auto-Extraktion">
+              <optgroup label="Versicherungspolicen · Auto-Extraktion">
                 <option value="SUVA-Police">SUVA-Police (UVG Berufsunfall / NBU)</option>
                 <option value="KTG-Police">KTG-Police (Krankentaggeld)</option>
                 <option value="BVG-Police">BVG-Police (Pensionskasse)</option>
@@ -167,12 +167,12 @@
               </svg>
               Mitarbeiter {{ importResult.employee_created ? 'angelegt' : 'aktualisiert' }}
             </p>
-            <p v-if="importResult.employee_created" class="hrk-muted hrk-small">
+            <p v-if="importResult.employee_created" class="hrk-muted">
               Onboarding-Checkliste gestartet.
               <template v-if="importResult.case_id"> Vertragsentwurf erstellt.</template>
             </p>
             <ul v-if="importResult.warnings && importResult.warnings.length" class="auto-result-card__warnings">
-              <li v-for="w in importResult.warnings" :key="w" class="hrk-muted hrk-small auto-result-card__warning-item">
+              <li v-for="w in importResult.warnings" :key="w" class="hrk-muted auto-result-card__warning-item">
                 <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polygon points="12 3.5 21.5 20 2.5 20" />
                   <line x1="12" y1="9.5" x2="12" y2="14" />
@@ -182,7 +182,7 @@
               </li>
             </ul>
             <div v-if="importResult.employee_id" class="hrk-actions" style="margin-top:12px">
-              <a :href="`/mitarbeiter-detail?id=${importResult.employee_id}`" class="hrk-btn hrk-btn--secondary">Mitarbeiter öffnen →</a>
+              <a :href="`/mitarbeiter-detail?id=${importResult.employee_id}`" class="hrk-btn hrk-btn--secondary">Mitarbeiter öffnen <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13,6 19,12 13,18"/></svg></a>
             </div>
           </div>
 
@@ -205,10 +205,10 @@
               Versicherungsdaten gespeichert
             </p>
             <ul v-if="extractResult.updated_fields && extractResult.updated_fields.length" class="auto-result-card__fields">
-              <li v-for="f in extractResult.updated_fields" :key="f" class="hrk-small">• {{ fieldLabel(f) }}</li>
+              <li v-for="f in extractResult.updated_fields" :key="f">• {{ fieldLabel(f) }}</li>
             </ul>
             <ul v-if="extractResult.warnings && extractResult.warnings.length" class="auto-result-card__warnings">
-              <li v-for="w in extractResult.warnings" :key="w" class="hrk-muted hrk-small auto-result-card__warning-item">
+              <li v-for="w in extractResult.warnings" :key="w" class="hrk-muted auto-result-card__warning-item">
                 <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polygon points="12 3.5 21.5 20 2.5 20" />
                   <line x1="12" y1="9.5" x2="12" y2="14" />
@@ -1019,24 +1019,24 @@ export default {
   --hrk-bordeaux:        #7B2D3B;
   --hrk-bordeaux-dark:   #5E2129;
   --hrk-bordeaux-soft:   #F3E7E9;
-  --hrk-creme:           #FBF8F3;
-  --hrk-anthrazit:       #2B2B2B;
+  --hrk-creme: #F7F5F1;
+  --hrk-anthrazit: #241F1C;
   --hrk-gold:            #C9A24B;
   --hrk-surface:         #FFFFFF;
-  --hrk-surface-muted:   #F5F1EB;
-  --hrk-border:          #ECE5D9;
-  --hrk-border-strong:   #DAD2C6;
-  --hrk-text:            #2B2B2B;
+  --hrk-surface-muted: #F2EFEA;
+  --hrk-border: #E2DDD5;
+  --hrk-border-strong: #CFC8BD;
+  --hrk-text: #241F1C;
   --hrk-text-muted:      #6B6357;
   --hrk-on-primary:     #FFFFFF;  /* Textfarbe auf Bordeaux-Buttons (Audit-Fix) */
-  --hrk-success:         #2E7D5B;  --hrk-success-bg: #E5F1EB;
-  --hrk-warning:         #B7791F;  --hrk-warning-bg: #FBF1DD;
+  --hrk-success: #2A7254;  --hrk-success-bg: #E5F1EB;
+  --hrk-warning: #946010;  --hrk-warning-bg: #FBF1DD;
   --hrk-danger:          #B23A48;  --hrk-danger-bg:  #F8E7E9;
   --hrk-info:            #2F6F9F;  --hrk-info-bg:    #E6F0F7;
   --hrk-neutral:         #6B6357;  --hrk-neutral-bg: #EFEAE2;
-  --hrk-font-head: "Fraunces", "Lora", Georgia, serif;
+  --hrk-font-head: "Archivo", "Inter", system-ui, sans-serif;
   --hrk-font-body: "Inter", "Source Sans 3", system-ui, sans-serif;
-  --hrk-fs-h1:    1.9375rem;
+  --hrk-fs-h1: 1.875rem;
   --hrk-fs-h2:    1.375rem;
   --hrk-fs-body:  1.0625rem;
   --hrk-fs-small: 0.9375rem;
@@ -1045,17 +1045,35 @@ export default {
   --hrk-space-1: 4px;  --hrk-space-2: 8px;  --hrk-space-3: 12px;
   --hrk-space-4: 16px; --hrk-space-5: 24px; --hrk-space-6: 32px;
   --hrk-space-7: 48px;
-  --hrk-radius-sm: 8px; --hrk-radius-md: 12px; --hrk-radius-lg: 14px;
-  --hrk-radius-pill: 999px;
+  --hrk-radius-sm: 6px; --hrk-radius-md: 6px; --hrk-radius-lg: 10px;
+  --hrk-radius-pill: 6px;
   --hrk-shadow-card: 0 1px 2px rgba(40,35,30,.05);
-  --hrk-shadow-pop:  0 8px 28px rgba(40,35,30,.12);
-  --hrk-focus-ring:  0 0 0 3px rgba(123,45,59,.30);
+  --hrk-shadow-pop: 0 1px 2px rgba(40,35,30,.05);
+  --hrk-focus-ring: 0 0 0 3px rgba(51,71,91,.35);
   --hrk-tap-min: 44px;
-  --hrk-overlay: rgba(0,0,0,.55);
+  --hrk-overlay: rgba(20,24,28,.55);
   --hrk-page-max: 680px;
   --hrk-icon-size-sm: 16px;
   --hrk-icon-size-md: 20px;
   --hrk-icon-size-lg: 28px;
+  /* Design-Umsetzung 23.09.2026 (Phase 1): Schiefer, Schriften, zwei Radien, ein Schatten */
+  --hrk-schiefer: #33475B;
+  --hrk-schiefer-dark: #243444;
+  --hrk-schiefer-soft: #EBEEF1;
+  --hrk-on-dark: #FFFFFF;
+  --hrk-on-dark-strong: rgba(255,255,255,.92);
+  --hrk-on-dark-soft: rgba(255,255,255,.82);
+  --hrk-on-dark-muted: rgba(255,255,255,.40);
+  --hrk-on-dark-faint: rgba(255,255,255,.12);
+  --hrk-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --hrk-font-brand: "Fraunces", Georgia, serif;
+  --hrk-fs-xs: 0.8125rem;
+  --hrk-ls-caps: .06em;
+  --hrk-radius-field: 6px;
+  --hrk-radius-card: 10px;
+  --hrk-shadow: 0 1px 2px rgba(40,35,30,.05);
+  --hrk-page-wide: 1200px;
+  --hrk-danger-dark: #8F2E3A;  /* Hover auf dem Loesch-Knopf (Gefahr, nicht Bordeaux) */
 }
 
 /* ── Basis ───────────────────────────────────────────────── */
@@ -1073,12 +1091,12 @@ export default {
 .hrk-h1 {
   font-family: var(--hrk-font-head); font-size: var(--hrk-fs-h1);
   font-weight: var(--hrk-fw-semibold); line-height: 1.15;
-  color: var(--hrk-bordeaux); margin: 0 0 var(--hrk-space-3);
+  color: var(--hrk-text); margin: 0 0 var(--hrk-space-3);
 }
 .hrk-h2 {
   font-family: var(--hrk-font-head); font-size: var(--hrk-fs-h2);
   font-weight: var(--hrk-fw-semibold); line-height: 1.2;
-  color: var(--hrk-bordeaux); margin: 0 0 var(--hrk-space-4);
+  color: var(--hrk-text); margin: 0 0 var(--hrk-space-4);
 }
 .hrk-muted  { color: var(--hrk-text-muted); }
 .hrk-small  { font-size: var(--hrk-fs-small); }
@@ -1088,7 +1106,7 @@ export default {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--hrk-space-2);
   min-height: var(--hrk-tap-min); padding: 0 var(--hrk-space-5);
   font: inherit; font-weight: var(--hrk-fw-semibold);
-  border-radius: var(--hrk-radius-md); border: 1px solid transparent;
+  border-radius: var(--hrk-radius-field); border: 1px solid transparent;
   cursor: pointer; text-decoration: none; white-space: nowrap;
   transition: background .15s, border-color .15s, transform .05s;
 }
@@ -1096,10 +1114,10 @@ export default {
 .hrk-btn:focus-visible { outline: none; box-shadow: var(--hrk-focus-ring); }
 .hrk-btn--primary   { background: var(--hrk-bordeaux); color: var(--hrk-on-primary); }
 .hrk-btn--primary:hover:not(:disabled) { background: var(--hrk-bordeaux-dark); }
-.hrk-btn--secondary { background: var(--hrk-surface); color: var(--hrk-bordeaux); border-color: var(--hrk-border-strong); }
-.hrk-btn--secondary:hover:not(:disabled) { background: var(--hrk-bordeaux-soft); }
-.hrk-btn--ghost     { background: transparent; color: var(--hrk-bordeaux); }
-.hrk-btn--ghost:hover:not(:disabled)  { background: var(--hrk-bordeaux-soft); }
+.hrk-btn--secondary { background: var(--hrk-surface); color: var(--hrk-schiefer); border-color: var(--hrk-border-strong); }
+.hrk-btn--secondary:hover:not(:disabled) { background: var(--hrk-schiefer-soft); border-color: var(--hrk-schiefer); }
+.hrk-btn--ghost     { background: transparent; color: var(--hrk-schiefer); }
+.hrk-btn--ghost:hover:not(:disabled)  { background: var(--hrk-schiefer-soft); }
 .hrk-btn--block     { width: 100%; }
 .hrk-btn:disabled   { opacity: .5; cursor: not-allowed; }
 
@@ -1107,8 +1125,8 @@ export default {
 .hrk-card {
   background: var(--hrk-surface);
   border: 1px solid var(--hrk-border);
-  border-radius: var(--hrk-radius-lg);
-  box-shadow: var(--hrk-shadow-card);
+  border-radius: var(--hrk-radius-card);
+  box-shadow: var(--hrk-shadow);
   padding: var(--hrk-space-5);
 }
 
@@ -1117,21 +1135,20 @@ export default {
 .hrk-label  { font-weight: var(--hrk-fw-semibold); font-size: var(--hrk-fs-small); color: var(--hrk-text-muted); }
 .hrk-input  {
   width: 100%; padding: var(--hrk-space-3) var(--hrk-space-4);
-  border: 1px solid var(--hrk-border-strong); border-radius: var(--hrk-radius-md);
+  border: 1px solid var(--hrk-border-strong); border-radius: var(--hrk-radius-field);
   background: var(--hrk-surface); font: inherit; color: var(--hrk-text);
   min-height: var(--hrk-tap-min);
 }
-.hrk-input:focus { outline: none; box-shadow: var(--hrk-focus-ring); border-color: var(--hrk-bordeaux); }
+.hrk-input:focus { outline: none; box-shadow: var(--hrk-focus-ring); border-color: var(--hrk-schiefer); }
 .hrk-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6357' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right var(--hrk-space-4) center; padding-right: var(--hrk-space-7); cursor: pointer; }
 
 /* ── Hinweisboxen ────────────────────────────────────────── */
 .hrk-note {
   padding: var(--hrk-space-3) var(--hrk-space-4);
-  border-radius: var(--hrk-radius-md);
+  border-radius: 0 var(--hrk-radius-field) var(--hrk-radius-field) 0;
   border-left: 3px solid var(--hrk-neutral);
   background: var(--hrk-neutral-bg);
   color: var(--hrk-text);
-  font-size: var(--hrk-fs-small);
   white-space: pre-line;
 }
 .hrk-note--warn    { border-color: var(--hrk-warning); background: var(--hrk-warning-bg); }
@@ -1161,18 +1178,18 @@ export default {
 .hrk-spinner {
   width: 28px; height: 28px;
   border: 3px solid var(--hrk-border);
-  border-top-color: var(--hrk-bordeaux);
+  border-top-color: var(--hrk-schiefer);
   border-radius: 50%;
   animation: hrk-spin .8s linear infinite;
 }
 .btn-spinner {
   display: inline-block; width: 16px; height: 16px;
-  border: 2px solid rgba(255,255,255,.4);
+  border: 2px solid var(--hrk-on-dark-muted);
   border-top-color: var(--hrk-on-primary);
   border-radius: 50%;
   animation: hrk-spin .8s linear infinite;
 }
-.btn-spinner--sm { border-color: var(--hrk-bordeaux-soft); border-top-color: var(--hrk-bordeaux); }
+.btn-spinner--sm { border-color: var(--hrk-schiefer-soft); border-top-color: var(--hrk-schiefer); }
 @keyframes hrk-spin { to { transform: rotate(360deg); } }
 
 /* ── Zustandsblöcke ──────────────────────────────────────── */
@@ -1206,7 +1223,7 @@ export default {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--hrk-space-2);
   min-height: 160px;
   border: 2px dashed var(--hrk-border-strong);
-  border-radius: var(--hrk-radius-lg);
+  border-radius: var(--hrk-radius-card);
   background: var(--hrk-surface-muted);
   cursor: pointer;
   transition: border-color .15s, background .15s;
@@ -1216,20 +1233,20 @@ export default {
 .upload-zone:focus { outline: none; box-shadow: var(--hrk-focus-ring); }
 .upload-zone:hover,
 .upload-zone--drag {
-  border-color: var(--hrk-bordeaux);
-  background: var(--hrk-bordeaux-soft);
+  border-color: var(--hrk-schiefer);
+  background: var(--hrk-schiefer-soft);
 }
 .upload-zone--has-file {
   flex-direction: row; justify-content: flex-start; text-align: left;
-  border-style: solid; border-color: var(--hrk-bordeaux);
-  background: var(--hrk-bordeaux-soft);
+  border-style: solid; border-color: var(--hrk-schiefer);
+  background: var(--hrk-schiefer-soft);
 }
 .upload-zone__input {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  opacity: 0; cursor: pointer; z-index: 1;
+  opacity: 0; cursor: pointer; z-index: 1; font: inherit;
 }
 .upload-zone--has-file .upload-zone__input { display: none; }
-.upload-zone__icon { width: 2rem; height: 2rem; color: var(--hrk-bordeaux); }
+.upload-zone__icon { width: 2rem; height: 2rem; color: var(--hrk-schiefer); }
 .upload-zone__text { font-weight: var(--hrk-fw-semibold); margin: 0; }
 .upload-zone__hint { font-size: var(--hrk-fs-small); margin: 0; }
 .upload-zone__file-info { flex: 1 1 auto; min-width: 0; }
@@ -1237,7 +1254,7 @@ export default {
 .upload-zone__file-name { font-weight: var(--hrk-fw-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .upload-zone__clear {
   flex: none; min-height: var(--hrk-tap-min); min-width: var(--hrk-tap-min);
-  padding: 0; font-size: 1rem; z-index: 2;
+  padding: 0; z-index: 2;
 }
 
 /* ── Datei-Liste ─────────────────────────────────────────── */
@@ -1247,7 +1264,7 @@ export default {
 .doc-item {
   display: flex; align-items: center; gap: var(--hrk-space-3);
   padding: var(--hrk-space-3) var(--hrk-space-4);
-  border: 1px solid var(--hrk-border); border-radius: var(--hrk-radius-md);
+  border: 1px solid var(--hrk-border); border-radius: var(--hrk-radius-field);
   background: var(--hrk-surface);
 }
 .doc-item__icon { width: 1.4rem; height: 1.4rem; flex: none; color: var(--hrk-text-muted); }
@@ -1257,26 +1274,26 @@ export default {
 .doc-item__actions { display: flex; gap: var(--hrk-space-2); flex: none; }
 .doc-btn {
   min-height: var(--hrk-tap-min); min-width: var(--hrk-tap-min);
-  padding: 0; font-size: 1rem;
+  padding: 0;
 }
 .doc-btn--delete:hover:not(:disabled) { color: var(--hrk-danger); background: var(--hrk-danger-bg); }
 
 /* ── Modal ───────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 200;
-  background: var(--hrk-overlay, rgba(43,43,43,.45));
+  background: var(--hrk-overlay);
   display: flex; align-items: center; justify-content: center;
   padding: var(--hrk-space-4);
 }
 .modal-box {
   max-width: 440px; width: 100%;
-  box-shadow: var(--hrk-shadow-pop);
+  box-shadow: var(--hrk-shadow);
 }
 .modal-title { margin-bottom: var(--hrk-space-3); }
 .modal-body  { margin: 0 0 var(--hrk-space-5); }
 .modal-actions { justify-content: flex-end; }
 .modal-delete-btn { background: var(--hrk-danger); }
-.modal-delete-btn:hover { background: var(--hrk-bordeaux-dark); }
+.modal-delete-btn:hover { background: var(--hrk-danger-dark); }
 
 /* ── Hilfsstyles btn-inner ───────────────────────────────── */
 .btn-inner { display: inline-flex; align-items: center; gap: var(--hrk-space-2); }
@@ -1284,13 +1301,14 @@ export default {
 /* ── Auto-Verarbeitung Ergebnis-Karten ───────────────────── */
 .auto-result-card {
   margin-top: var(--hrk-space-4);
-  border-left: 3px solid var(--hrk-bordeaux);
-  background: var(--hrk-bordeaux-soft);
+  border-left: 3px solid var(--hrk-schiefer);
+  background: var(--hrk-schiefer-soft);
   padding: var(--hrk-space-4) var(--hrk-space-5);
 }
 .auto-result-card__title {
+  font-family: var(--hrk-font-head);
   font-weight: var(--hrk-fw-semibold);
-  color: var(--hrk-bordeaux);
+  color: var(--hrk-text);
   margin: 0 0 var(--hrk-space-2);
   font-size: var(--hrk-fs-body);
 }
