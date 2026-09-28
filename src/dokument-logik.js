@@ -145,3 +145,42 @@ export function signedUrlFull(baseUrl, rel) {
   const path = r.startsWith('/') ? r : `/${r}`;
   return `${base}${path.indexOf('/storage/v1') === 0 ? path : `/storage/v1${path}`}`;
 }
+
+// ─── Versicherungspolice: nur auslesen, nicht still speichern (28.09.2026) ───
+// Wie Einrichtung Schritt 4: extract-insurance-data mit nur_auslesen:true.
+// Die Werte werden nur angezeigt; uebernommen werden sie unter
+// Betrieb › Versicherungen.
+
+export const INSURANCE_LABELS = {
+  ktg_versicherer: 'Versicherer (KTG)',
+  ktg_police_nr: 'Police-Nr. (KTG)',
+  ktg_pct: 'Prämiensatz (KTG)',
+  ktg_wartezeit_tage: 'Wartefrist (KTG)',
+  uvg_versicherer: 'Versicherer (UVG)',
+  uvg_police_nr: 'Police-Nr. (UVG)',
+  nbu_pct: 'Prämiensatz (NBU)',
+  bvg_versicherer: 'Versicherer (BVG)',
+  bvg_police_nr: 'Police-Nr. (BVG)',
+  bvg_pct: 'Beitragssatz (BVG)',
+};
+
+export const MSG_POLICE_NUR_GELESEN =
+  'Emily hat diese Werte aus der Police gelesen. Gespeichert ist noch nichts. Prüf sie und trag sie unter Betrieb › Versicherungen ein.';
+
+export function buildExtractBody({ file_base64, mime_type, insurance_type }) {
+  return { file_base64, mime_type: mime_type || 'application/pdf', insurance_type, nur_auslesen: true };
+}
+
+/** Erkannte Werte als Liste { feld, label, wert } fuer die Anzeige; leere fallen weg. */
+export function ausgeleseneWerte(fields) {
+  if (!fields || typeof fields !== 'object') return [];
+  return Object.keys(fields)
+    .filter((k) => fields[k] !== null && fields[k] !== undefined && String(fields[k]).trim() !== '')
+    .map((k) => {
+      const v = fields[k];
+      let wert = String(v);
+      if (/_pct$/.test(k)) wert = `${v} %`;
+      else if (k === 'ktg_wartezeit_tage') wert = `${v} Tage`;
+      return { feld: k, label: INSURANCE_LABELS[k] || k, wert };
+    });
+}

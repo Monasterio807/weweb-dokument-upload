@@ -16,6 +16,9 @@ import {
   MSG_DB_REMOVED,
   MSG_DB_STUCK,
   MSG_DB_UNKNOWN,
+  MSG_POLICE_NUR_GELESEN,
+  buildExtractBody,
+  ausgeleseneWerte,
 } from './dokument-logik.js';
 
 // Live-CHECK employee_documents_category_check, per SELECT am 28.09.2026 gelesen
@@ -186,5 +189,26 @@ describe('Download-Adresse (T1-36)', () => {
   it('leer bleibt leer', () => {
     expect(signedUrlFull(base, '')).toBe('');
     expect(signedUrlFull(base, undefined)).toBe('');
+  });
+});
+
+describe('Versicherungspolice nur auslesen (28.09.2026)', () => {
+  it('schickt nur_auslesen:true', () => {
+    const b = buildExtractBody({ file_base64: 'AAA', mime_type: '', insurance_type: 'ktg' });
+    expect(b).toEqual({ file_base64: 'AAA', mime_type: 'application/pdf', insurance_type: 'ktg', nur_auslesen: true });
+  });
+  it('zeigt erkannte Werte mit Einheit, leere fallen weg', () => {
+    const w = ausgeleseneWerte({ ktg_versicherer: 'Helsana', ktg_police_nr: null, ktg_pct: 1.2, ktg_wartezeit_tage: 30 });
+    expect(w).toEqual([
+      { feld: 'ktg_versicherer', label: 'Versicherer (KTG)', wert: 'Helsana' },
+      { feld: 'ktg_pct', label: 'Prämiensatz (KTG)', wert: '1.2 %' },
+      { feld: 'ktg_wartezeit_tage', label: 'Wartefrist (KTG)', wert: '30 Tage' },
+    ]);
+    expect(ausgeleseneWerte(null)).toEqual([]);
+  });
+  it('Hinweis nennt Betrieb › Versicherungen und sagt, dass nichts gespeichert ist', () => {
+    expect(MSG_POLICE_NUR_GELESEN).toContain('Betrieb › Versicherungen');
+    expect(MSG_POLICE_NUR_GELESEN).toContain('Gespeichert ist noch nichts');
+    expect(MSG_POLICE_NUR_GELESEN).not.toMatch(/[ß—–]/);
   });
 });

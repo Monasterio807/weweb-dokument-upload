@@ -8,7 +8,7 @@ export default {
     { name: 'deleted',             label: { en: 'On deleted',               de: 'Datei gelöscht'                 }, event: { id: '' } },
     { name: 'error',               label: { en: 'On error',                 de: 'Fehler'                         }, event: { reason: '' } },
     { name: 'employee-imported',   label: { en: 'On employee auto-imported', de: 'Mitarbeiter automatisch erfasst' }, event: { employee_id: '', employee_created: true } },
-    { name: 'insurance-extracted', label: { en: 'On insurance data extracted', de: 'Versicherungsdaten extrahiert' }, event: { insurance_type: '', updated_fields: [] } },
+    { name: 'insurance-extracted', label: { en: 'On insurance data extracted', de: 'Versicherungsdaten extrahiert' }, event: { insurance_type: '', updated_fields: [], fields: {}, gespeichert: false } },
   ],
   properties: {
     authToken: {

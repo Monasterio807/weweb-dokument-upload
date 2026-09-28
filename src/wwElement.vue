@@ -167,7 +167,7 @@
               <line x1="12" y1="7.5" x2="12" y2="13" />
               <circle cx="12" cy="16.3" r="0.15" fill="currentColor" stroke-width="2.4" />
             </svg>
-            <span><strong>Emily ist aktiv.</strong> Nach dem Hochladen liest Emily die Police und übernimmt die Werte direkt in dein Betriebsprofil. Prüf sie danach kurz.</span>
+            <span><strong>Emily ist aktiv.</strong> Nach dem Hochladen liest Emily die Police und zeigt dir die Werte. Übernehmen kannst du sie unter Betrieb › Versicherungen.</span>
           </div>
 
           <!-- Meldungen Upload -->
@@ -227,12 +227,12 @@
                 <circle cx="12" cy="12" r="9" />
                 <polyline points="8 12.5 11 15.5 16 9.5" />
               </svg>
-              Versicherungsdaten gespeichert
+              Werte aus der Police gelesen
             </p>
-            <p class="hrk-muted">Emily hat die Werte schon in dein Betriebsprofil übernommen. Prüf sie bitte jetzt unter <a class="hrk-link" href="/mein-betrieb">Mein Betrieb</a>, bevor du einen Vertrag erstellst. Beim Prämiensatz lohnt sich ein zweiter Blick auf die Police.</p>
-            <ul v-if="extractResult.updated_fields && extractResult.updated_fields.length" class="auto-result-card__fields">
-              <li v-for="f in extractResult.updated_fields" :key="f">• {{ fieldLabel(f) }}</li>
+            <ul v-if="extractWerte.length" class="auto-result-card__fields">
+              <li v-for="w in extractWerte" :key="w.feld">• {{ w.label }}: {{ w.wert }}</li>
             </ul>
+            <p class="hrk-muted">{{ msgPoliceNurGelesen }} <a class="hrk-link" href="/mein-betrieb">Zu Betrieb › Versicherungen</a></p>
             <ul v-if="extractResult.warnings && extractResult.warnings.length" class="auto-result-card__warnings">
               <li v-for="w in extractResult.warnings" :key="w" class="hrk-muted auto-result-card__warning-item">
                 <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -394,6 +394,10 @@ import {
   mapEmployees,
   saveMetadata,
   signedUrlFull,
+  INSURANCE_LABELS,
+  MSG_POLICE_NUR_GELESEN,
+  buildExtractBody,
+  ausgeleseneWerte,
 } from './dokument-logik.js';
 
 export default {
@@ -446,6 +450,12 @@ export default {
   },
 
   computed: {
+    extractWerte() {
+      return ausgeleseneWerte(this.extractResult && this.extractResult.fields);
+    },
+    msgPoliceNurGelesen() {
+      return MSG_POLICE_NUR_GELESEN;
+    },
     baseUrl() {
       let __sbBase = String((this.content && this.content.supabaseUrl) || 'https://ztvqsxdudzdyqgeylujr.supabase.co').replace(/\/+$/, '');
       if (/nemxnflngcfrpamkuesm/.test(String(__sbBase))) __sbBase = '';
@@ -1128,23 +1138,14 @@ export default {
      * @returns {string} lesbares Label
      */
     fieldLabel(f) {
-      const labels = {
-        ktg_versicherer: 'Versicherer (KTG)',
-        ktg_police_nr:   'Police-Nr. (KTG)',
-        ktg_pct:         'Prämiensatz (KTG)',
-        uvg_versicherer: 'Versicherer (UVG)',
-        uvg_police_nr:   'Police-Nr. (UVG)',
-        nbu_pct:         'Prämiensatz (NBU)',
-        bvg_versicherer: 'Versicherer (BVG)',
-        bvg_police_nr:   'Police-Nr. (BVG)',
-        bvg_pct:         'Beitragssatz (BVG)',
-      };
-      return labels[f] || f;
+      return INSURANCE_LABELS[f] || f;
     },
 
     /**
      * Versicherungspolice hochgeladen → extract-insurance-data aufrufen.
-     * Speichert Versichererdaten direkt in company_profiles.
+     * Nur auslesen (nur_auslesen:true, wie Einrichtung Schritt 4): nichts wird
+     * gespeichert, die Werte werden angezeigt und unter Betrieb › Versicherungen
+     * uebernommen.
      * @param {File}   file          — die hochgeladene Datei
      * @param {string} insurance_type — 'suva' | 'ktg' | 'bvg'
      */
@@ -1159,11 +1160,7 @@ export default {
           {
             method: 'POST',
             headers: { ...this.authHeaders, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              file_base64,
-              mime_type:      file.type || 'application/pdf',
-              insurance_type,
-            }),
+            body: JSON.stringify(buildExtractBody({ file_base64, mime_type: file.type, insurance_type })),
           },
           90000
         );
@@ -1173,6 +1170,8 @@ export default {
           this.emitEvent('insurance-extracted', {
             insurance_type,
             updated_fields: body.updated_fields || [],
+            fields: body.fields || {},
+            gespeichert: body.gespeichert === true,
           });
         } else {
           const msg = String((body && (body.error || body.message)) || `HTTP ${res.status}`);
