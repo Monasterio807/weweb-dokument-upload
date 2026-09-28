@@ -58,7 +58,7 @@
                 <path d="M17 7 a3 3 0 0 0 -4.24 0 L6 13.76 a5 5 0 1 0 7.07 7.07" />
               </svg>
               <p class="upload-zone__text">Hier klicken oder Datei reinziehen</p>
-              <p class="hrk-muted upload-zone__hint">PDF, JPG, PNG oder DOCX — max. 10 MB</p>
+              <p class="hrk-muted upload-zone__hint">PDF, JPG, PNG oder DOCX, höchstens 10 MB</p>
             </template>
 
             <!-- Datei ausgewählt -->
@@ -125,6 +125,31 @@
                 <option value="Sonstiges">Sonstiges</option>
               </optgroup>
             </select>
+            <p v-if="insuranceType" class="hrk-hint">Policen gehören zum Betrieb, nicht zu einer Person. In der Liste bleibt der Policentyp sichtbar.</p>
+          </div>
+
+          <!-- Personenwahl (SW-4): Dokument einer Mitarbeitenden Person zuordnen -->
+          <div v-if="showEmployeeField" class="hrk-field">
+            <label class="hrk-label" for="doc-employee">Mitarbeitende Person<template v-if="employeeRequired"> (Pflicht)</template><template v-else> (optional)</template></label>
+            <select
+              id="doc-employee"
+              v-model="employeeId"
+              class="hrk-input hrk-select"
+              :class="{ 'hrk-input--error': fieldErrors.employee }"
+              :disabled="employeesLoading"
+              :aria-invalid="fieldErrors.employee ? 'true' : null"
+              :aria-describedby="fieldErrors.employee ? 'doc-employee-error doc-employee-hint' : 'doc-employee-hint'"
+            >
+              <option value="">{{ employeesLoading ? 'Mitarbeitende werden geladen …' : 'Bitte wählen' }}</option>
+              <option v-for="emp in employees" :key="emp.id" :value="emp.id">{{ emp.name }}</option>
+            </select>
+            <p v-if="fieldErrors.employee" id="doc-employee-error" class="hrk-field-error">{{ fieldErrors.employee }}</p>
+            <p id="doc-employee-hint" class="hrk-hint">
+              <template v-if="employeesError">{{ employeesError }}</template>
+              <template v-else-if="!employeesLoading && !employees.length">Noch keine Mitarbeitenden erfasst. <a class="hrk-link" href="/mitarbeiter">Leg zuerst die Person an.</a></template>
+              <template v-else-if="employeeRequired">So landet das Dokument in der Akte der Person.</template>
+              <template v-else>Wenn du eine Person wählst, erscheint das Dokument auch in ihrer Akte.</template>
+            </p>
           </div>
 
           <!-- Auto-Verarbeitung Hinweis (sichtbar wenn Datei ausgewählt) -->
@@ -134,7 +159,7 @@
               <line x1="12" y1="7.5" x2="12" y2="13" />
               <circle cx="12" cy="16.3" r="0.15" fill="currentColor" stroke-width="2.4" />
             </svg>
-            <span><strong>Emily ist aktiv</strong> — nach dem Hochladen liest Emily den Vertrag automatisch und legt den Mitarbeiter an.</span>
+            <span><strong>Emily ist aktiv.</strong> Nach dem Hochladen liest Emily den Vertrag automatisch und legt den Mitarbeiter an.</span>
           </div>
           <div v-else-if="insuranceType && selectedFile" class="hrk-note hrk-note--info hrk-note--icon">
             <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -142,7 +167,7 @@
               <line x1="12" y1="7.5" x2="12" y2="13" />
               <circle cx="12" cy="16.3" r="0.15" fill="currentColor" stroke-width="2.4" />
             </svg>
-            <span><strong>Emily ist aktiv</strong> — nach dem Hochladen extrahiert Emily die Versicherungsdaten direkt in dein Betriebsprofil.</span>
+            <span><strong>Emily ist aktiv.</strong> Nach dem Hochladen liest Emily die Police und übernimmt die Werte direkt in dein Betriebsprofil. Prüf sie danach kurz.</span>
           </div>
 
           <!-- Meldungen Upload -->
@@ -204,6 +229,7 @@
               </svg>
               Versicherungsdaten gespeichert
             </p>
+            <p class="hrk-muted">Emily hat die Werte schon in dein Betriebsprofil übernommen. Prüf sie bitte jetzt unter <a class="hrk-link" href="/mein-betrieb">Mein Betrieb</a>, bevor du einen Vertrag erstellst. Beim Prämiensatz lohnt sich ein zweiter Blick auf die Police.</p>
             <ul v-if="extractResult.updated_fields && extractResult.updated_fields.length" class="auto-result-card__fields">
               <li v-for="f in extractResult.updated_fields" :key="f">• {{ fieldLabel(f) }}</li>
             </ul>
@@ -240,6 +266,7 @@
           <h2 class="hrk-h2 doc-list-card__title">Deine Dokumente</h2>
 
           <div v-if="listError" class="hrk-note hrk-note--warn" role="alert">{{ listError }}</div>
+          <div v-if="downloadError" class="hrk-note hrk-note--warn" role="alert">{{ downloadError }}</div>
 
           <div v-if="listLoading" class="hrk-state hrk-state--inline">
             <div class="hrk-spinner" aria-hidden="true"></div>
@@ -248,7 +275,7 @@
 
           <div v-else-if="!documents.length" class="hrk-empty">
             <p class="hrk-empty__text">Noch keine Dokumente hochgeladen.</p>
-            <p class="hrk-muted">Lade oben dein erstes Dokument hoch — dauert nur ein paar Sekunden.</p>
+            <p class="hrk-muted">Lade oben dein erstes Dokument hoch. Das dauert nur ein paar Sekunden.</p>
           </div>
 
           <ul v-else class="doc-list" role="list">
@@ -280,9 +307,10 @@
                 <polyline points="15 3 15 7 19 7" />
               </svg>
               <div class="doc-item__body">
-                <p class="doc-item__name">{{ doc.file_name }}</p>
+                <p class="doc-item__name">{{ docLabel(doc).name }}</p>
                 <p class="doc-item__meta hrk-muted hrk-small">
-                  <span class="hrk-badge hrk-badge--neutral">{{ doc.category }}</span>
+                  <span class="hrk-badge hrk-badge--neutral">{{ docLabel(doc).category }}</span>
+                  <template v-if="employeeName(doc.employee_id)">&nbsp;·&nbsp;{{ employeeName(doc.employee_id) }}</template>
                   &nbsp;·&nbsp;{{ fmtDate(doc.uploaded_at) }}
                   <template v-if="doc.file_size_bytes">&nbsp;·&nbsp;{{ fmtSize(doc.file_size_bytes) }}</template>
                 </p>
@@ -291,7 +319,7 @@
                 <button
                   class="hrk-btn hrk-btn--secondary doc-btn"
                   :disabled="downloading === doc.id"
-                  :aria-label="'Herunterladen: ' + doc.file_name"
+                  :aria-label="'Öffnen: ' + docLabel(doc).name"
                   @click="downloadFile(doc)"
                 >
                   <span v-if="downloading === doc.id" class="btn-spinner btn-spinner--sm" aria-hidden="true"></span>
@@ -304,7 +332,7 @@
                 <button
                   class="hrk-btn hrk-btn--ghost doc-btn doc-btn--delete"
                   :disabled="deleting === doc.id"
-                  :aria-label="'Löschen: ' + doc.file_name"
+                  :aria-label="'Löschen: ' + docLabel(doc).name"
                   @click="confirmDelete(doc)"
                 >
                   <span v-if="deleting === doc.id" class="btn-spinner btn-spinner--sm" aria-hidden="true"></span>
@@ -326,7 +354,7 @@
           <div class="modal-box hrk-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <h2 id="modal-title" class="hrk-h2 modal-title">Dokument löschen?</h2>
             <p class="modal-body">
-              Willst du <strong>{{ deleteTarget.file_name }}</strong> wirklich löschen?
+              Willst du <strong>{{ docLabel(deleteTarget).name }}</strong> wirklich löschen?
               Das lässt sich nicht rückgängig machen.
             </p>
             <div class="hrk-actions modal-actions">
@@ -351,7 +379,23 @@
  *   Storage-Bucket «employee-documents» (privat, file_size_limit 10 MB)
  *
  * Props: authToken, apiKey, supabaseUrl, storageBucket, backUrl
+ *
+ * Nacht-Buendel 28.09.2026 (SW-3 Policen als «Sonstiges» mit Typ-Praefix, SW-4
+ * Personenwahl + employee_id, T1-36 Download-Adresse): Logik in ./dokument-logik.js,
+ * Tests in ./dokument-logik.test.js.
  */
+
+import {
+  PERSON_CATEGORIES,
+  PERSON_REQUIRED_CATEGORIES,
+  parseDocLabel,
+  validatePerson,
+  buildInsertPayload,
+  mapEmployees,
+  saveMetadata,
+  signedUrlFull,
+} from './dokument-logik.js';
+
 export default {
   props: {
     content: { type: Object, required: true },
@@ -369,6 +413,13 @@ export default {
       // Upload
       selectedFile: null,
       category: 'Sonstiges',
+      // Personenwahl (SW-4)
+      employeeId: '',
+      employees: [],
+      employeesLoading: false,
+      employeesError: '',
+      employeesLoaded: false,
+      fieldErrors: {},
       dragOver: false,
       uploading: false,
       uploadError: '',
@@ -379,6 +430,7 @@ export default {
       listError: '',
       // Download
       downloading: null,
+      downloadError: '',
       // Löschen
       deleting: null,
       deleteTarget: null,
@@ -460,11 +512,28 @@ export default {
       const map = { 'SUVA-Police': 'suva', 'KTG-Police': 'ktg', 'BVG-Police': 'bvg' };
       return map[this.category] || null;
     },
+    /** Personenwahl sichtbar (Ausweiskopie, Zeugnis, Lohnabrechnung, Sonstiges) */
+    showEmployeeField() {
+      return PERSON_CATEGORIES.includes(this.category);
+    },
+    /** Person Pflicht: personenbezogene Kategorie und die Liste konnte geladen werden */
+    employeeRequired() {
+      return PERSON_REQUIRED_CATEGORIES.includes(this.category);
+    },
+    /** id -> Anzeigename der Mitarbeitenden */
+    employeeNameById() {
+      const map = {};
+      (this.employees || []).forEach((e) => { if (e && e.id) map[e.id] = e.name; });
+      return map;
+    },
   },
 
   watch: {
     'content.authToken'(v) { if (v) this.init(); },
     'content.apiKey'(v)    { if (v && this.content && this.content.authToken) this.init(); },
+    // Live-Clearing (DESIGN-SYSTEM §9): Fehler verschwindet, sobald die Bedingung erfuellt ist
+    employeeId(v) { this.clearFieldError('employee', !!v); },
+    category()    { this.clearFieldError('employee', !this.employeeRequired || !!this.employeeId); },
   },
 
   mounted() {
@@ -495,6 +564,27 @@ export default {
       this.needLogin = false;
       if (!this.tokenRaw) { this.needLogin = true; return; }
       this.loadFiles();
+      this.loadEmployees();
+    },
+
+    clearFieldError(key, isValid) {
+      if (!isValid || !this.fieldErrors[key]) return;
+      const next = { ...this.fieldErrors };
+      delete next[key];
+      this.fieldErrors = next;
+    },
+
+    /** Fokus aufs erste fehlerhafte Feld (Komfort, nie blockierend) */
+    focusFirstError(errObj, idMap) {
+      const first = Object.keys(errObj || {}).find((k) => errObj[k] && idMap[k]);
+      if (!first) return;
+      this.$nextTick(() => {
+        try {
+          const doc = (typeof wwLib !== 'undefined' && wwLib.getFrontDocument) ? wwLib.getFrontDocument() : (typeof document !== 'undefined' ? document : null);
+          const el = doc && doc.getElementById(idMap[first]);
+          if (el && el.focus) el.focus();
+        } catch (e) { /* nie blockieren */ }
+      });
     },
 
     // Bei 401 das Supabase-Token via GoTrue (refresh_token) erneuern.
@@ -553,6 +643,50 @@ export default {
       if (mime.includes('image'))             return 'image';
       if (mime.includes('word') || mime.includes('document')) return 'word';
       return 'generic';
+    },
+
+    /** Anzeige-Label einer Zeile: { category, name } (Policentyp aus dem Praefix) */
+    docLabel(doc) {
+      return parseDocLabel(doc);
+    },
+
+    employeeName(id) {
+      return (id && this.employeeNameById[id]) || '';
+    },
+
+    /**
+     * Prueft die Eingaben vor dem Upload. Pflicht-Person nur, wenn die Liste
+     * geladen werden konnte; scheitert der RPC, blockieren wir den Upload nicht.
+     * @returns {boolean} true wenn alles passt
+     */
+    validateUpload() {
+      const e = validatePerson({
+        category: this.category,
+        employeeId: this.employeeId,
+        employeesLoaded: this.employeesLoaded,
+        employeeCount: this.employees.length,
+      });
+      this.fieldErrors = e;
+      if (Object.keys(e).length) {
+        this.focusFirstError(e, { employee: 'doc-employee' });
+        return false;
+      }
+      return true;
+    },
+
+    /** Datei nach abgelehntem Insert wieder aus dem Storage entfernen. true = weg. */
+    async removeUploadedFile(filePath) {
+      try {
+        const res = await this.authedFetch(
+          `${this.baseUrl}/storage/v1/object/${encodeURIComponent(this.bucket)}`,
+          {
+            method:  'DELETE',
+            headers: { ...this.authHeaders, 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ prefixes: [filePath] }),
+          }
+        );
+        return !!(res && res.ok);
+      } catch (e) { return false; }
     },
 
     fmtSize(bytes) {
@@ -648,7 +782,8 @@ export default {
     async uploadFile() {
       if (!this.selectedFile || this.uploading) return;
       const uid = this.userId;
-      if (!uid) { this.uploadError = 'Bitte melde dich neu an — kein gültiger Login-Token.'; return; }
+      if (!uid) { this.uploadError = 'Deine Anmeldung ist abgelaufen. Bitte melde dich neu an.'; return; }
+      if (!this.validateUpload()) return;
 
       this.uploading = true;
       this.uploadError = '';
@@ -695,40 +830,50 @@ export default {
           return;
         }
 
-        // 2) Metadaten in employee_documents speichern
-        const meta = {
-          user_id:          uid,
-          file_name:        this.selectedFile.name,
-          file_path:        filePath,
-          file_size_bytes:  this.selectedFile.size,
-          mime_type:        mime,
-          category:         this.category,
-        };
-        // Prefer: return=representation → gibt die neue Zeile mit ID zurück
-        const dbRes = await this.authedFetch(
-          `${this.baseUrl}/rest/v1/employee_documents`,
-          {
-            method:  'POST',
-            headers: {
-              ...this.authHeaders,
-              'Content-Type': 'application/json',
-              Prefer: 'return=representation',
-              Accept: 'application/json',
-            },
-            body: JSON.stringify(meta),
-          }
-        );
-
-        let insertedDocId = null;
-        if (!dbRes.ok) {
-          // Upload erfolgreich, aber Metadaten-Insert fehlgeschlagen
-          this.uploadSuccess = 'Die Datei ist hochgeladen, erscheint aber noch nicht in der Liste. Lade die Seite neu — dann siehst du sie.';
-        } else {
-          const inserted = await dbRes.json().catch(() => []);
-          insertedDocId = Array.isArray(inserted) && inserted[0] ? inserted[0].id : null;
-          this.uploadSuccess = `«${this.selectedFile.name}» wurde hochgeladen.`;
-          this.emitEvent('uploaded', { file_name: this.selectedFile.name, category: this.category });
+        // 2) Metadaten in employee_documents speichern (SW-3: category im CHECK, SW-4: employee_id).
+        // Erfolg nur bei geschriebener Zeile; bei Ablehnung Datei wieder entfernen und ehrlich sagen.
+        const meta = buildInsertPayload({
+          userId: uid,
+          filePath,
+          mime,
+          file: this.selectedFile,
+          category: this.category,
+          employeeId: this.employeeId,
+        });
+        const saved = await saveMetadata({
+          insert: () => this.authedFetch(
+            `${this.baseUrl}/rest/v1/employee_documents`,
+            {
+              method:  'POST',
+              headers: {
+                ...this.authHeaders,
+                'Content-Type': 'application/json',
+                Prefer: 'return=representation',
+                Accept: 'application/json',
+              },
+              body: JSON.stringify(meta),
+            }
+          ),
+          remove: () => this.removeUploadedFile(filePath),
+        });
+        if (!saved.ok) {
+          console.error('[dokument-upload] Insert employee_documents fehlgeschlagen:', saved.status, 'Datei entfernt:', saved.removed);
+          this.uploadError = saved.message;
+          this.emitEvent('error', { reason: 'db', status: saved.status, file_removed: saved.removed });
+          if (saved.removed === null) await this.loadFiles();
+          return;
         }
+        const insertedDocId = (saved.row && saved.row.id) || null;
+        const personName = this.employeeName(meta.employee_id);
+        this.uploadSuccess = personName
+          ? `«${this.selectedFile.name}» ist gespeichert und liegt in der Akte von ${personName}.`
+          : `«${this.selectedFile.name}» ist gespeichert.`;
+        this.emitEvent('uploaded', {
+          file_name: this.selectedFile.name,
+          category: this.category,
+          employee_id: meta.employee_id,
+        });
+        if (meta.employee_id) this.employeeId = '';
 
         // Datei-Referenz sichern vor clearFile()
         const capturedFile   = this.selectedFile;
@@ -781,11 +926,44 @@ export default {
       }
     },
 
+    /**
+     * Mitarbeitende des Betriebs laden (gleiche Quelle wie personaldossier:
+     * RPC get_user_employees, RLS-gefiltert). Scheitert der Aufruf, bleibt der
+     * Upload moeglich, die Person ist dann nicht Pflicht.
+     */
+    async loadEmployees() {
+      this.employeesLoading = true;
+      this.employeesError = '';
+      this.employeesLoaded = false;
+      try {
+        const fields = ['id', 'firstname', 'lastname'].join(',');
+        const url = `${this.baseUrl}/rest/v1/rpc/get_user_employees?select=${fields}&order=lastname.asc`;
+        const res = await this.authedFetch(url, {
+          headers: { ...this.authHeaders, Accept: 'application/json' },
+        });
+        if (!res.ok) {
+          this.employees = [];
+          this.employeesError = 'Die Mitarbeitenden konnten gerade nicht geladen werden. Du kannst das Dokument trotzdem hochladen.';
+          return;
+        }
+        const data = await res.json().catch(() => []);
+        const list = Array.isArray(data) ? data : [];
+        this.employees = mapEmployees(list);
+        this.employeesLoaded = true;
+      } catch (e) {
+        this.employees = [];
+        this.employeesError = 'Netzwerkfehler beim Laden der Mitarbeitenden. Du kannst das Dokument trotzdem hochladen.';
+      } finally {
+        this.employeesLoading = false;
+      }
+    },
+
     // ── Download (Signed URL) ────────────────────────────────────────────────
 
     async downloadFile(doc) {
       if (this.downloading) return;
       this.downloading = doc.id;
+      this.downloadError = '';
       try {
         // Signed URL generieren (1 Stunde gültig)
         const signRes = await this.authedFetch(
@@ -798,18 +976,18 @@ export default {
         );
         if (signRes.ok) {
           const body = await signRes.json().catch(() => ({}));
-          const rel  = body && (body.signedURL || body.signedUrl);
-          if (rel) {
-            const full = rel.startsWith('http') ? rel : `${this.baseUrl}${rel}`;
-            if (typeof window !== 'undefined') window.open(full, '_blank', 'noopener');
+          const full = signedUrlFull(this.baseUrl, body && (body.signedURL || body.signedUrl));
+          if (full) {
+            const win = (typeof wwLib !== 'undefined' && wwLib.getFrontWindow) ? wwLib.getFrontWindow() : (typeof window !== 'undefined' ? window : null);
+            if (win) win.open(full, '_blank', 'noopener');
             return;
           }
         }
-        // Fallback: authenticated object URL direkt öffnen
-        const fallback = `${this.baseUrl}/storage/v1/object/authenticated/${encodeURIComponent(this.bucket)}/${doc.file_path}`;
-        if (typeof window !== 'undefined') window.open(fallback, '_blank', 'noopener');
+        // Kein signierter Link: ein Tab ohne Anmeldung zeigte nur eine Fehlermeldung (T1-36).
+        console.error('[dokument-upload] Signieren fehlgeschlagen:', signRes.status);
+        this.downloadError = 'Das Dokument lässt sich gerade nicht öffnen. Bitte versuch es nochmal.';
       } catch (e) {
-        // Stilles Scheitern — kein Upload-Fehler zeigen
+        this.downloadError = 'Das Dokument lässt sich gerade nicht öffnen. Bitte versuch es nochmal.';
       } finally {
         this.downloading = null;
       }
@@ -853,7 +1031,7 @@ export default {
           this.emitEvent('deleted', { id: doc.id });
           // Metadaten sind weg, aber die Datei liegt evtl. noch im Storage — das
           // muss sichtbar sein, sonst wirkt "gelöscht" vollständiger als es ist.
-          if (storageFailed) this.uploadError = 'Dokument aus der Liste entfernt, aber die Datei selbst konnte nicht vollständig gelöscht werden. Bitte Richard/Support Bescheid geben.';
+          if (storageFailed) this.uploadError = 'Dokument aus der Liste entfernt, aber die Datei selbst konnte nicht vollständig gelöscht werden. Bitte melde dich beim Imploya-Support.';
         } else {
           console.error('[dokument-upload] DB-Delete fehlgeschlagen:', doc.id, dbRes.status);
           this.uploadError = 'Löschen hat nicht geklappt. Bitte versuch es nochmal.';
@@ -924,11 +1102,14 @@ export default {
                 headers: { ...this.authHeaders, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
                 body: JSON.stringify({ employee_id: body.employee_id }),
               }
-            ).catch(() => null);  // Nicht-blockierend, Fehler ignorieren
+            ).then((r) => {
+              // Nicht-blockierend, aber nicht stumm: ohne Verknuepfung fehlt das Dokument in der Akte (SW-4)
+              if (!r || !r.ok) console.error('[dokument-upload] Verknuepfung Dokument/Person fehlgeschlagen:', r && r.status);
+            }).catch(() => console.error('[dokument-upload] Verknuepfung Dokument/Person: Netzwerkfehler'));
           }
         } else {
           const msg = String((body && (body.error || body.message)) || `HTTP ${res.status}`);
-          this.importError = 'Der automatische Import hat nicht geklappt. Du kannst die Person von Hand erfassen — das Dokument ist gespeichert.';
+          this.importError = 'Der automatische Import hat nicht geklappt. Du kannst die Person von Hand erfassen. Das Dokument ist gespeichert.';
         }
       } catch (e) {
         if (e && e.name === 'AbortError') {
@@ -995,7 +1176,7 @@ export default {
           });
         } else {
           const msg = String((body && (body.error || body.message)) || `HTTP ${res.status}`);
-          this.extractError = 'Das Auslesen hat nicht geklappt. Du kannst die Angaben unter «Mein Betrieb» von Hand eintragen — das Dokument ist gespeichert.';
+          this.extractError = 'Das Auslesen hat nicht geklappt. Du kannst die Angaben unter «Mein Betrieb» von Hand eintragen. Das Dokument ist gespeichert.';
         }
       } catch (e) {
         if (e && e.name === 'AbortError') {
@@ -1140,6 +1321,11 @@ export default {
   min-height: var(--hrk-tap-min);
 }
 .hrk-input:focus { outline: none; box-shadow: var(--hrk-focus-ring); border-color: var(--hrk-schiefer); }
+.hrk-hint  { color: var(--hrk-text-muted); font-size: var(--hrk-fs-small); margin: 0; }
+.hrk-input--error { border-color: var(--hrk-danger); }
+.hrk-field-error { color: var(--hrk-danger); font-size: var(--hrk-fs-small); font-weight: var(--hrk-fw-medium); margin: 0; }
+.hrk-link { color: var(--hrk-bordeaux); text-decoration: underline; }
+.hrk-select:disabled { opacity: .6; cursor: not-allowed; }
 .hrk-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6357' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right var(--hrk-space-4) center; padding-right: var(--hrk-space-7); cursor: pointer; }
 
 /* ── Hinweisboxen ────────────────────────────────────────── */
