@@ -232,7 +232,7 @@
             <ul v-if="extractWerte.length" class="auto-result-card__fields">
               <li v-for="w in extractWerte" :key="w.feld">• {{ w.label }}: {{ w.wert }}</li>
             </ul>
-            <p class="hrk-muted">{{ msgPoliceNurGelesen }} <a class="hrk-link" href="/mein-betrieb">Zu Betrieb › Versicherungen</a></p>
+            <p class="hrk-muted">{{ msgPoliceNurGelesen }} <a class="hrk-link" href="/onboarding-start?bearbeiten=1&amp;schritt=4">Zu Betriebsangaben › Versicherungen &amp; Sätze</a></p>
             <ul v-if="extractResult.warnings && extractResult.warnings.length" class="auto-result-card__warnings">
               <li v-for="w in extractResult.warnings" :key="w" class="hrk-muted auto-result-card__warning-item">
                 <svg class="hrk-icon hrk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1175,7 +1175,7 @@ export default {
           });
         } else {
           const msg = String((body && (body.error || body.message)) || `HTTP ${res.status}`);
-          this.extractError = 'Das Auslesen hat nicht geklappt. Du kannst die Angaben unter «Mein Betrieb» von Hand eintragen. Das Dokument ist gespeichert.';
+          this.extractError = 'Das Auslesen hat nicht geklappt. Du kannst die Angaben unter «Betriebsangaben» von Hand eintragen. Das Dokument ist gespeichert.';
         }
       } catch (e) {
         if (e && e.name === 'AbortError') {

@@ -8,6 +8,7 @@
     "prebuild": "node -e \"require('fs').rmSync('dist/manager.js',{force:true})\"",
     "postbuild": "node -e \"const fs=require('fs');let s;try{s=fs.statSync('dist/manager.js')}catch(e){};if(!s||s.size<1000){console.error('Bau fehlgeschlagen: dist/manager.js wurde nicht geschrieben.');process.exit(1)}\"",
     "serve": "weweb serve",
+    "test:wortlaut": "node --test tests/wortlaut.check.mjs",
     "test": "vitest run"
   },
   "devDependencies": {
