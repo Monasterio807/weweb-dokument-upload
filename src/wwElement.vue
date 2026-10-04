@@ -904,7 +904,7 @@ export default {
         if (e && e.name === 'AbortError') {
           this.uploadError = 'Der Upload hat zu lange gedauert. Bitte versuche es mit einer kleineren Datei.';
         } else {
-          this.uploadError = 'Netzwerkfehler beim Hochladen. Bitte versuche es nochmal.';
+          this.uploadError = 'Keine Verbindung beim Hochladen. Prüf dein Internet und versuch es nochmal.';
         }
         this.emitEvent('error', { reason: 'network' });
       } finally {
@@ -924,13 +924,13 @@ export default {
         });
         if (res.status === 401 || res.status === 403) { this.needLogin = true; return; }
         if (!res.ok) {
-          this.listError = 'Dokumente konnten nicht geladen werden.';
+          this.listError = 'Die Dokumente konnten nicht geladen werden. Lade die Seite neu.';
           return;
         }
         const data = await res.json().catch(() => []);
         this.documents = Array.isArray(data) ? data : [];
       } catch (e) {
-        this.listError = 'Netzwerkfehler beim Laden der Dokumentenliste.';
+        this.listError = 'Keine Verbindung. Die Dokumentenliste konnte nicht geladen werden. Prüf dein Internet und lade die Seite neu.';
       } finally {
         this.listLoading = false;
       }
@@ -962,7 +962,7 @@ export default {
         this.employeesLoaded = true;
       } catch (e) {
         this.employees = [];
-        this.employeesError = 'Netzwerkfehler beim Laden der Mitarbeitenden. Du kannst das Dokument trotzdem hochladen.';
+        this.employeesError = 'Keine Verbindung. Die Mitarbeitenden konnten nicht geladen werden. Du kannst das Dokument trotzdem hochladen.';
       } finally {
         this.employeesLoading = false;
       }
@@ -1123,9 +1123,9 @@ export default {
         }
       } catch (e) {
         if (e && e.name === 'AbortError') {
-          this.importError = 'Zeitüberschreitung beim Import. Bitte versuche es nochmal.';
+          this.importError = 'Der Import hat zu lange gedauert. Bitte versuche es nochmal.';
         } else {
-          this.importError = 'Netzwerkfehler beim automatischen Import.';
+          this.importError = 'Keine Verbindung beim automatischen Import. Du kannst die Person von Hand erfassen. Das Dokument ist gespeichert.';
         }
       } finally {
         this.importLoading = false;
@@ -1179,9 +1179,9 @@ export default {
         }
       } catch (e) {
         if (e && e.name === 'AbortError') {
-          this.extractError = 'Zeitüberschreitung bei der Extraktion. Bitte versuche es nochmal.';
+          this.extractError = 'Das Auslesen hat zu lange gedauert. Bitte versuche es nochmal.';
         } else {
-          this.extractError = 'Netzwerkfehler bei der Versicherungs-Extraktion.';
+          this.extractError = 'Keine Verbindung beim Auslesen der Police. Du kannst die Angaben unter «Betriebsangaben» von Hand eintragen. Das Dokument ist gespeichert.';
         }
       } finally {
         this.extractLoading = false;
