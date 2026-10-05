@@ -371,7 +371,7 @@
 
 <script>
 /**
- * WeWeb Coded Component — Dokument-Upload (HR am Tisch / Imploya)
+ * WeWeb Coded Component — Dokument-Upload (HR am Tisch / imploya)
  * Erlaubt das Hochladen von HR-Dokumenten (PDF, JPG, PNG, DOCX) ins Supabase Storage.
  * Speichert Metadaten in der Tabelle `employee_documents`.
  *
@@ -832,7 +832,7 @@ export default {
           if (/bucket not found|bucket/i.test(msg)) {
             this.uploadError =
               'Der Dokumenten-Speicher ist noch nicht bereit. ' +
-              'Bitte versuch es später nochmal oder melde dich kurz beim Imploya-Support.';
+              'Bitte versuch es später nochmal oder melde dich kurz beim imploya-Support.';
           } else {
             this.uploadError = 'Der Upload hat nicht geklappt. Bitte versuch es nochmal.';
           }
@@ -1041,7 +1041,7 @@ export default {
           this.emitEvent('deleted', { id: doc.id });
           // Metadaten sind weg, aber die Datei liegt evtl. noch im Storage — das
           // muss sichtbar sein, sonst wirkt "gelöscht" vollständiger als es ist.
-          if (storageFailed) this.uploadError = 'Dokument aus der Liste entfernt, aber die Datei selbst konnte nicht vollständig gelöscht werden. Bitte melde dich beim Imploya-Support.';
+          if (storageFailed) this.uploadError = 'Dokument aus der Liste entfernt, aber die Datei selbst konnte nicht vollständig gelöscht werden. Bitte melde dich beim imploya-Support.';
         } else {
           console.error('[dokument-upload] DB-Delete fehlgeschlagen:', doc.id, dbRes.status);
           this.uploadError = 'Löschen hat nicht geklappt. Bitte versuch es nochmal.';

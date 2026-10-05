@@ -104,7 +104,7 @@ export function mapEmployees(rows) {
 export const MSG_DB_REMOVED =
   'Das Dokument konnte nicht gespeichert werden. Die Datei wurde wieder entfernt. Bitte versuch es nochmal.';
 export const MSG_DB_STUCK =
-  'Das Dokument konnte nicht gespeichert werden und erscheint nicht in der Liste. Die Datei liegt noch im Speicher. Bitte versuch es nochmal oder melde dich beim Imploya-Support.';
+  'Das Dokument konnte nicht gespeichert werden und erscheint nicht in der Liste. Die Datei liegt noch im Speicher. Bitte versuch es nochmal oder melde dich beim imploya-Support.';
 export const MSG_DB_UNKNOWN =
   'Die Verbindung ist beim Speichern abgebrochen. Wir wissen nicht sicher, ob das Dokument gespeichert wurde. Schau bitte in der Liste unten nach, bevor du es nochmal hochlädst.';
 
