@@ -72,7 +72,7 @@ export function validatePerson({ category, employeeId, employeesLoaded, employee
   if (personRequired(category) && employeesLoaded && !employeeId) {
     e.employee = employeeCount
       ? 'Bitte wähle aus, zu welcher Person das Dokument gehört.'
-      : 'Für diese Kategorie braucht es eine erfasste Person. Leg sie zuerst unter «Mitarbeitende» an.';
+      : 'Für diese Kategorie braucht es eine erfasste Person. Lege sie zuerst unter «Mitarbeitende» an.';
   }
   return e;
 }
@@ -106,7 +106,7 @@ export const MSG_DB_REMOVED =
 export const MSG_DB_STUCK =
   'Das Dokument konnte nicht gespeichert werden und erscheint nicht in der Liste. Die Datei liegt noch im Speicher. Bitte versuch es nochmal oder melde dich beim imploya-Support.';
 export const MSG_DB_UNKNOWN =
-  'Die Verbindung ist beim Speichern abgebrochen. Wir wissen nicht sicher, ob das Dokument gespeichert wurde. Schau bitte in der Liste unten nach, bevor du es nochmal hochlädst.';
+  'Die Verbindung ist beim Speichern abgebrochen. Wir wissen nicht sicher, ob das Dokument gespeichert wurde. Schaue bitte in der Liste unten nach, bevor du es nochmal hochlädst.';
 
 /**
  * Metadaten-Zeile schreiben und das Ergebnis ehrlich auswerten.
@@ -165,7 +165,7 @@ export const INSURANCE_LABELS = {
 };
 
 export const MSG_POLICE_NUR_GELESEN =
-  'Emily hat diese Werte aus der Police gelesen. Gespeichert ist noch nichts. Prüf sie und trag sie unter Betrieb › Versicherungen ein.';
+  'Emily hat diese Werte aus der Police gelesen. Gespeichert ist noch nichts. Prüfe sie und trage sie unter Betrieb › Versicherungen ein.';
 
 export function buildExtractBody({ file_base64, mime_type, insurance_type }) {
   return { file_base64, mime_type: mime_type || 'application/pdf', insurance_type, nur_auslesen: true };

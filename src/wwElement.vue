@@ -146,7 +146,7 @@
             <p v-if="fieldErrors.employee" id="doc-employee-error" class="hrk-field-error">{{ fieldErrors.employee }}</p>
             <p id="doc-employee-hint" class="hrk-hint">
               <template v-if="employeesError">{{ employeesError }}</template>
-              <template v-else-if="!employeesLoading && !employees.length">Noch keine Mitarbeitenden erfasst. <a class="hrk-link" href="/mitarbeiter">Leg zuerst die Person an.</a></template>
+              <template v-else-if="!employeesLoading && !employees.length">Noch keine Mitarbeitenden erfasst. <a class="hrk-link" href="/mitarbeiter">Lege zuerst die Person an.</a></template>
               <template v-else-if="employeeRequired">So landet das Dokument in der Akte der Person.</template>
               <template v-else>Wenn du eine Person wählst, erscheint das Dokument auch in ihrer Akte.</template>
             </p>
@@ -904,7 +904,7 @@ export default {
         if (e && e.name === 'AbortError') {
           this.uploadError = 'Der Upload hat zu lange gedauert. Bitte versuche es mit einer kleineren Datei.';
         } else {
-          this.uploadError = 'Keine Verbindung beim Hochladen. Prüf dein Internet und versuch es nochmal.';
+          this.uploadError = 'Keine Verbindung beim Hochladen. Prüfe dein Internet und versuche es nochmal.';
         }
         this.emitEvent('error', { reason: 'network' });
       } finally {
@@ -930,7 +930,7 @@ export default {
         const data = await res.json().catch(() => []);
         this.documents = Array.isArray(data) ? data : [];
       } catch (e) {
-        this.listError = 'Keine Verbindung. Die Dokumentenliste konnte nicht geladen werden. Prüf dein Internet und lade die Seite neu.';
+        this.listError = 'Keine Verbindung. Die Dokumentenliste konnte nicht geladen werden. Prüfe dein Internet und lade die Seite neu.';
       } finally {
         this.listLoading = false;
       }
