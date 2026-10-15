@@ -877,7 +877,7 @@ export default {
               'Der Dokumenten-Speicher ist noch nicht bereit. ' +
               'Bitte versuch es später nochmal oder melde dich kurz beim imploya-Support.';
           } else {
-            this.uploadError = 'Der Upload hat nicht geklappt. Bitte versuch es nochmal.';
+            this.uploadError = 'Der Upload hat nicht geklappt. Bitte versuche es nochmal.';
           }
           this.emitEvent('error', { reason: 'upload', detail: msg });
           return;
@@ -1038,9 +1038,9 @@ export default {
         }
         // Kein signierter Link: ein Tab ohne Anmeldung zeigte nur eine Fehlermeldung (T1-36).
         console.error('[dokument-upload] Signieren fehlgeschlagen:', signRes.status);
-        this.downloadError = 'Das Dokument lässt sich gerade nicht öffnen. Bitte versuch es nochmal.';
+        this.downloadError = 'Das Dokument lässt sich gerade nicht öffnen. Bitte versuche es nochmal.';
       } catch (e) {
-        this.downloadError = 'Das Dokument lässt sich gerade nicht öffnen. Bitte versuch es nochmal.';
+        this.downloadError = 'Das Dokument lässt sich gerade nicht öffnen. Bitte versuche es nochmal.';
       } finally {
         this.downloading = null;
       }
@@ -1087,10 +1087,10 @@ export default {
           if (storageFailed) this.uploadError = 'Dokument aus der Liste entfernt, aber die Datei selbst konnte nicht vollständig gelöscht werden. Bitte melde dich beim imploya-Support.';
         } else {
           console.error('[dokument-upload] DB-Delete fehlgeschlagen:', doc.id, dbRes.status);
-          this.uploadError = 'Löschen hat nicht geklappt. Bitte versuch es nochmal.';
+          this.uploadError = 'Löschen hat nicht geklappt. Bitte versuche es nochmal.';
         }
       } catch (e) {
-        this.uploadError = 'Löschen hat nicht geklappt. Bitte versuch es nochmal.';
+        this.uploadError = 'Löschen hat nicht geklappt. Bitte versuche es nochmal.';
       } finally {
         this.deleting = null;
       }
