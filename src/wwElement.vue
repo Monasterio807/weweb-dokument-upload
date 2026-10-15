@@ -875,7 +875,7 @@ export default {
           if (/bucket not found|bucket/i.test(msg)) {
             this.uploadError =
               'Der Dokumenten-Speicher ist noch nicht bereit. ' +
-              'Bitte versuch es später nochmal oder melde dich kurz beim imploya-Support.';
+              'Bitte versuche es später nochmal oder melde dich kurz beim imploya-Support.';
           } else {
             this.uploadError = 'Der Upload hat nicht geklappt. Bitte versuche es nochmal.';
           }
