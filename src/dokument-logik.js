@@ -184,3 +184,34 @@ export function ausgeleseneWerte(fields) {
       return { feld: k, label: INSURANCE_LABELS[k] || k, wert };
     });
 }
+
+// ─── A7 (14.11.2026) W11: Umlaute im Dateinamen, Grund des Fehlers ───────────
+// Der Speicher nimmt nur ASCII-Schluessel an. Umlaute, Gedankenstrich und «&» im Dateinamen
+// liessen den Upload scheitern. Der Pfad wird aus einem sicheren Namen gebaut, angezeigt wird der
+// Originalname (file_name). Gleiche Fassung wie in coded-component-personaldossier-detail.
+export function sichererDateiname(name) {
+  const roh = String(name || '').normalize('NFC').trim();
+  const m = roh.match(/\.([A-Za-z0-9]{1,8})$/);
+  const endung = m ? `.${m[1].toLowerCase()}` : '';
+  let basis = (m ? roh.slice(0, -m[0].length) : roh)
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
+    .replace(/Ä/g, 'Ae').replace(/Ö/g, 'Oe').replace(/Ü/g, 'Ue').replace(/ß/g, 'ss')
+    .replace(/&/g, ' und ')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9._-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^[_.-]+|[_.-]+$/g, '');
+  basis = basis.slice(0, 80).replace(/[_.-]+$/g, '');
+  return `${basis || 'datei'}${endung}`;
+}
+
+/** Grund eines fehlgeschlagenen Uploads in einem Satz (Du-Form). Nie Rohtext des Speichers. */
+export function uploadFehlerText(status, meldung) {
+  const m = String(meldung || '').toLowerCase();
+  if (status === 413 || /maximum allowed size|too large|payload too/.test(m)) return 'Die Datei ist zu gross. Der Speicher nimmt höchstens 10 MB.';
+  if (status === 415 || /mime|unsupported/.test(m)) return 'Dieses Dateiformat nimmt der Speicher nicht an. Es gehen PDF, JPG, PNG und DOCX.';
+  if (/invalid key|invalidkey|invalid.*(name|path)/.test(m)) return 'Der Dateiname enthält Zeichen, die der Speicher nicht annimmt. Benenne die Datei um und versuche es bitte nochmal.';
+  if (status === 404 || /bucket not found/.test(m)) return 'Der Dokumenten-Speicher ist gerade nicht bereit. Versuche es später bitte nochmal.';
+  if (status >= 500) return 'Der Speicher antwortet gerade nicht. Versuche es in ein paar Minuten bitte nochmal.';
+  return `Das Hochladen hat nicht geklappt (Fehler ${status || '?'}). Versuche es bitte nochmal.`;
+}

@@ -19,6 +19,8 @@ import {
   MSG_POLICE_NUR_GELESEN,
   buildExtractBody,
   ausgeleseneWerte,
+  sichererDateiname,
+  uploadFehlerText,
 } from './dokument-logik.js';
 
 // Live-CHECK employee_documents_category_check, per SELECT am 28.09.2026 gelesen
@@ -210,5 +212,28 @@ describe('Versicherungspolice nur auslesen (28.09.2026)', () => {
     expect(MSG_POLICE_NUR_GELESEN).toContain('Betrieb › Versicherungen');
     expect(MSG_POLICE_NUR_GELESEN).toContain('Gespeichert ist noch nichts');
     expect(MSG_POLICE_NUR_GELESEN).not.toMatch(/[ß—–]/);
+  });
+});
+
+describe('A7 W11: Umlaute im Dateinamen', () => {
+  const UML = 'Übersicht Löhne März – Küche & Service.pdf';
+  it('macht daraus einen ASCII-Namen, auch mit zerlegten Umlauten (macOS)', () => {
+    expect(sichererDateiname(UML)).toBe('Uebersicht_Loehne_Maerz_Kueche_und_Service.pdf');
+    expect(sichererDateiname(UML.normalize('NFD'))).toBe('Uebersicht_Loehne_Maerz_Kueche_und_Service.pdf');
+  });
+  it('liefert immer nur erlaubte Zeichen und nie einen leeren Namen', () => {
+    for (const n of [UML, 'ÄÖÜ äöü ß.PDF', 'Zeugnis (final) #2?.docx', '///', '', 'é à ç.png']) {
+      expect(sichererDateiname(n)).toMatch(/^[A-Za-z0-9._-]+$/);
+    }
+    expect(sichererDateiname('')).toBe('datei');
+    expect(sichererDateiname('a'.repeat(300) + '.pdf').length).toBeLessThanOrEqual(90);
+  });
+  it('nennt beim Fehler den Grund, ohne ß und ohne Rohtext', () => {
+    expect(uploadFehlerText(400, 'Invalid key: Ü.pdf')).toMatch(/Dateiname/);
+    expect(uploadFehlerText(413, 'The object exceeded the maximum allowed size')).toMatch(/zu gross.*10 MB/);
+    expect(uploadFehlerText(415, 'mime type not supported')).toMatch(/Dateiformat/);
+    expect(uploadFehlerText(500, '')).toMatch(/antwortet gerade nicht/);
+    expect(uploadFehlerText(418, '')).toMatch(/Fehler 418/);
+    expect(uploadFehlerText(400, 'Invalid key: Ü.pdf')).not.toMatch(/Ü\.pdf/);
   });
 });
