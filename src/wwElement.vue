@@ -872,7 +872,7 @@ export default {
           const msg = String((errBody && (errBody.message || errBody.error)) || `HTTP ${uploadRes.status}`);
           // A7 W11: die Meldung nennt den Grund (Dateiname, Grösse, Format, Speicher), nicht nur «nochmal».
           this.uploadError = uploadFehlerText(uploadRes.status, msg);
-          this.emitEvent('error', { reason: 'upload', detail: msg });
+          this.emitEvent('error', { reason: 'upload', status: uploadRes.status }); // keine Meldung ins Event: sie kann den Dateinamen tragen
           return;
         }
 
