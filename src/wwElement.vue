@@ -380,8 +380,7 @@
           <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <h2 id="modal-title" class="modal-title">Dokument löschen?</h2>
             <p class="modal-body">
-              Willst du <strong>{{ docLabel(deleteTarget).name }}</strong> wirklich löschen?
-              Das lässt sich nicht rückgängig machen.
+              Willst du <strong>{{ docLabel(deleteTarget).name }}</strong><template v-if="employeeName(deleteTarget.employee_id)"> für {{ employeeName(deleteTarget.employee_id) }}</template> löschen? Es verschwindet aus deiner Liste und wird <strong>archiviert</strong>. Endgültig gelöscht wird nichts, weil du Unterlagen aufbewahren musst. Aus dem Archiv kannst du es jederzeit zurückholen.
             </p>
             <div class="modal-actions">
               <button type="button" class="du-bk" @click="deleteTarget = null">Abbrechen</button>
@@ -424,6 +423,8 @@ import {
   MSG_POLICE_NUR_GELESEN,
   buildExtractBody,
   ausgeleseneWerte,
+  sichererDateiname,
+  uploadFehlerText,
 } from './dokument-logik.js';
 
 // Stil A (Entscheid 13.10.2026): Gloock (Titel) und Archivo (Labels) nachladen, weil die App-Seite sie nicht von selbst
@@ -760,11 +761,8 @@ export default {
     },
 
     sanitizeFilename(name) {
-      // Leerzeichen + Sonderzeichen ersetzen, Doppel-Underscores zusammenführen
-      return (name || 'datei')
-        .replace(/[^a-zA-Z0-9.\-_äöüÄÖÜ]/g, '_')
-        .replace(/_+/g, '_')
-        .replace(/^_|_$/g, '');
+      // A7 W11: nur ASCII im Speicherpfad (Umlaute liessen den Upload scheitern), der Originalname bleibt in file_name
+      return sichererDateiname(name);
     },
 
     generateUUID() {
@@ -872,13 +870,8 @@ export default {
         if (!uploadRes.ok) {
           const errBody = await uploadRes.json().catch(() => ({}));
           const msg = String((errBody && (errBody.message || errBody.error)) || `HTTP ${uploadRes.status}`);
-          if (/bucket not found|bucket/i.test(msg)) {
-            this.uploadError =
-              'Der Dokumenten-Speicher ist noch nicht bereit. ' +
-              'Bitte versuche es später nochmal oder melde dich kurz beim imploya-Support.';
-          } else {
-            this.uploadError = 'Der Upload hat nicht geklappt. Bitte versuche es nochmal.';
-          }
+          // A7 W11: die Meldung nennt den Grund (Dateiname, Grösse, Format, Speicher), nicht nur «nochmal».
+          this.uploadError = uploadFehlerText(uploadRes.status, msg);
           this.emitEvent('error', { reason: 'upload', detail: msg });
           return;
         }
@@ -971,7 +964,8 @@ export default {
           return;
         }
         const data = await res.json().catch(() => []);
-        this.documents = Array.isArray(data) ? data : [];
+        // A7: Archivierte Dateien stehen unter «Meine Dokumente» im Archiv und sind nur dort wieder da.
+        this.documents = Array.isArray(data) ? data.filter((d) => !d.geloescht_am) : [];
       } catch (e) {
         this.listError = 'Keine Verbindung. Die Dokumentenliste konnte nicht geladen werden. Prüfe dein Internet und lade die Seite neu.';
       } finally {
@@ -1032,7 +1026,7 @@ export default {
           const full = signedUrlFull(this.baseUrl, body && (body.signedURL || body.signedUrl));
           if (full) {
             const win = (typeof wwLib !== 'undefined' && wwLib.getFrontWindow) ? wwLib.getFrontWindow() : (typeof window !== 'undefined' ? window : null);
-            if (win) win.open(full, '_blank', 'noopener');
+            if (win) win.open(full + `${full.includes('?') ? '&' : '?'}download=${encodeURIComponent(this.docLabel(doc).name)}`, '_blank', 'noopener');
             return;
           }
         }
@@ -1052,41 +1046,27 @@ export default {
       this.deleteTarget = doc;
     },
 
+    // A7 (14.11.2026, Corina Karte 709 / Antwort 410): «Löschen» legt die Datei ins Archiv, sie bleibt aufbewahrt.
+    // Gleicher Weg wie in «Meine Dokumente»: Edge Function delete-own-document, nie ein DELETE auf Zeile oder Datei.
     async deleteFile(doc) {
       this.deleteTarget = null;
       this.deleting = doc.id;
       this.uploadError = '';
       try {
-        // 1) Datei aus Storage löschen. Silent-Failure-Audit 19.09.2026: Fehler hier
-        // blieb bisher komplett unsichtbar — die Datei (ggf. Ausweis, Arztzeugnis)
-        // bleibt dann physisch im Bucket stehen, auch wenn der DB-Eintrag verschwindet.
-        const storageRes = await this.authedFetch(
-          `${this.baseUrl}/storage/v1/object/${encodeURIComponent(this.bucket)}`,
+        const res = await this.authedFetch(
+          `${this.baseUrl}/functions/v1/delete-own-document`,
           {
-            method:  'DELETE',
-            headers: { ...this.authHeaders, 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ prefixes: [doc.file_path] }),
-          }
-        ).catch(() => null);
-        const storageFailed = !storageRes || !storageRes.ok;
-        if (storageFailed) console.error('[dokument-upload] Storage-Delete fehlgeschlagen:', doc.file_path, storageRes && storageRes.status);
-
-        // 2) Metadaten aus DB löschen (RLS stellt sicher: nur eigene Zeilen)
-        const dbRes = await this.authedFetch(
-          `${this.baseUrl}/rest/v1/employee_documents?id=eq.${encodeURIComponent(doc.id)}`,
-          {
-            method:  'DELETE',
-            headers: { ...this.authHeaders, Prefer: 'return=minimal' },
+            method:  'POST',
+            headers: { ...this.authHeaders, 'Content-Type': 'application/json', Accept: 'application/json' },
+            body:    JSON.stringify({ source_table: 'employee_documents', id: doc.id }),
           }
         );
-        if (dbRes.ok || dbRes.status === 404) {
+        const body = await res.json().catch(() => ({}));
+        if (res.ok && body && body.success) {
           this.documents = this.documents.filter(d => d.id !== doc.id);
           this.emitEvent('deleted', { id: doc.id });
-          // Metadaten sind weg, aber die Datei liegt evtl. noch im Storage — das
-          // muss sichtbar sein, sonst wirkt "gelöscht" vollständiger als es ist.
-          if (storageFailed) this.uploadError = 'Dokument aus der Liste entfernt, aber die Datei selbst konnte nicht vollständig gelöscht werden. Bitte melde dich beim imploya-Support.';
         } else {
-          console.error('[dokument-upload] DB-Delete fehlgeschlagen:', doc.id, dbRes.status);
+          console.error('[dokument-upload] Archivieren fehlgeschlagen:', doc.id, res.status);
           this.uploadError = 'Löschen hat nicht geklappt. Bitte versuche es nochmal.';
         }
       } catch (e) {
