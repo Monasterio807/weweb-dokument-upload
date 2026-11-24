@@ -1135,7 +1135,7 @@ export default {
           // A-013 G5b-15: PATCH abwarten; scheitert die Zuordnung, steht ein fester Satz unter dem Ergebnis.
           if (docId && body.employee_id) {
             const z = await dokumentZuordnen({
-              authedFetch: this.authedFetch, baseUrl: this.baseUrl, headers: this.authHeaders,
+              authedFetch: (...a) => this.authedFetch(...a), baseUrl: this.baseUrl, headers: this.authHeaders,
               docId, employeeId: body.employee_id,
             });
             if (!z.ok) this.zuordnungError = z.satz;
