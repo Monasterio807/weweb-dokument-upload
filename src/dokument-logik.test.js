@@ -21,6 +21,8 @@ import {
   ausgeleseneWerte,
   sichererDateiname,
   uploadFehlerText,
+  MSG_ZUORDNUNG_FEHLT,
+  dokumentZuordnen,
 } from './dokument-logik.js';
 
 // Live-CHECK employee_documents_category_check, per SELECT am 28.09.2026 gelesen
@@ -235,5 +237,39 @@ describe('A7 W11: Umlaute im Dateinamen', () => {
     expect(uploadFehlerText(500, '')).toMatch(/antwortet gerade nicht/);
     expect(uploadFehlerText(418, '')).toMatch(/Fehler 418/);
     expect(uploadFehlerText(400, 'Invalid key: Ü.pdf')).not.toMatch(/Ü\.pdf/);
+  });
+});
+
+// A-013 G5b-15: Verknuepfung Dokument/Person darf nicht still scheitern.
+describe('dokumentZuordnen (G5b-15)', () => {
+  const args = (fetchFn) => ({ authedFetch: fetchFn, baseUrl: 'https://db.example.co', headers: { apikey: 'k' }, docId: 'd-1', employeeId: 'e-1' });
+  it('wartet das PATCH ab und meldet ok bei 2xx', async () => {
+    const f = vi.fn(async () => ({ ok: true, status: 204 }));
+    const r = await dokumentZuordnen(args(f));
+    expect(r).toEqual({ ok: true });
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(f.mock.calls[0][0]).toMatch(/employee_documents\?id=eq\.d-1$/);
+    expect(f.mock.calls[0][1].method).toBe('PATCH');
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ employee_id: 'e-1' });
+  });
+  it('HTTP-Fehler ergibt festen Satz, nie Gut-Zustand, nie Rohtext', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const r = await dokumentZuordnen(args(async () => ({ ok: false, status: 500, json: async () => ({ message: 'ROHTEXT' }) })));
+    expect(r.ok).toBe(false);
+    expect(r.satz).toBe(MSG_ZUORDNUNG_FEHLT);
+    expect(JSON.stringify(r)).not.toMatch(/ROHTEXT|500/);
+    expect(warn.mock.calls.flat().join(' ')).toMatch(/500/);
+    expect(warn.mock.calls.flat().join(' ')).not.toMatch(/ROHTEXT|d-1|e-1/);
+    warn.mockRestore();
+  });
+  it('Netzfehler und Abbruch ergeben ebenfalls den festen Satz', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const r = await dokumentZuordnen(args(async () => { throw new Error('ROHTEXT-NETZ d-1'); }));
+    expect(r).toEqual({ ok: false, satz: MSG_ZUORDNUNG_FEHLT });
+    expect(warn.mock.calls.flat().join(' ')).not.toMatch(/ROHTEXT|d-1/);
+    warn.mockRestore();
+  });
+  it('MSG_ZUORDNUNG_FEHLT ist ein Du-Satz', () => {
+    expect(MSG_ZUORDNUNG_FEHLT).toBe('Das Dokument konnte der Akte nicht zugeordnet werden. Du kannst es in der Akte neu ablegen.');
   });
 });

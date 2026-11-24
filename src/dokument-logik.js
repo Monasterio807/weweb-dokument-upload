@@ -215,3 +215,26 @@ export function uploadFehlerText(status, meldung) {
   if (status >= 500) return 'Der Speicher antwortet gerade nicht. Versuche es in ein paar Minuten bitte nochmal.';
   return `Das Hochladen hat nicht geklappt (Fehler ${status || '?'}). Versuche es bitte nochmal.`;
 }
+
+// A-013 G5b-15: Nach dem Vertrags-Import muss das Dokument der Person zugeordnet werden.
+// Das PATCH wird abgewartet. Scheitert es, bekommt die Kundin einen festen Satz (nie Rohtext);
+// im Log steht nur der Statuscode.
+export const MSG_ZUORDNUNG_FEHLT = 'Das Dokument konnte der Akte nicht zugeordnet werden. Du kannst es in der Akte neu ablegen.';
+
+export async function dokumentZuordnen({ authedFetch, baseUrl, headers, docId, employeeId }) {
+  try {
+    const r = await authedFetch(
+      `${baseUrl}/rest/v1/employee_documents?id=eq.${encodeURIComponent(docId)}`,
+      {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ employee_id: employeeId }),
+      }
+    );
+    if (r && r.ok) return { ok: true };
+    console.warn('[dokument-upload] Zuordnung Dokument/Person: HTTP ' + (r && r.status ? r.status : '?'));
+  } catch (e) {
+    console.warn('[dokument-upload] Zuordnung Dokument/Person: Netzfehler');
+  }
+  return { ok: false, satz: MSG_ZUORDNUNG_FEHLT };
+}

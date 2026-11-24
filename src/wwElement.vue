@@ -219,6 +219,7 @@
                     {{ w }}
                   </li>
                 </ul>
+                <p v-if="zuordnungError" class="hrk-field-error" role="alert">{{ zuordnungError }}</p>
                 <div v-if="importResult.employee_id" class="auto-result-card__act">
                   <a :href="`/mitarbeiter-detail?id=${importResult.employee_id}`" class="du-lk">Mitarbeiter öffnen</a>
                 </div>
@@ -425,6 +426,7 @@ import {
   ausgeleseneWerte,
   sichererDateiname,
   uploadFehlerText,
+  dokumentZuordnen,
 } from './dokument-logik.js';
 
 // Stil A (Entscheid 13.10.2026): Gloock (Titel) und Archivo (Labels) nachladen, weil die App-Seite sie nicht von selbst
@@ -485,6 +487,7 @@ export default {
       importLoading: false,
       importResult: null,
       importError: '',
+      zuordnungError: '',
       // Versicherungs-Extraktion (SUVA/KTG/BVG-Police)
       extractLoading: false,
       extractResult: null,
@@ -841,6 +844,7 @@ export default {
       this.uploadSuccess = '';
       this.importResult = null;
       this.importError = '';
+      this.zuordnungError = '';
       this.extractResult = null;
       this.extractError = '';
 
@@ -1103,6 +1107,7 @@ export default {
     async importEmployee(file, docId) {
       this.importLoading = true;
       this.importError  = '';
+      this.zuordnungError = '';
       this.importResult = null;
       try {
         const file_base64 = await this.fileToBase64(file);
@@ -1127,18 +1132,13 @@ export default {
             employee_created: body.employee_created,
           });
           // Dokument mit neuem Mitarbeiter verknüpfen
+          // A-013 G5b-15: PATCH abwarten; scheitert die Zuordnung, steht ein fester Satz unter dem Ergebnis.
           if (docId && body.employee_id) {
-            this.authedFetch(
-              `${this.baseUrl}/rest/v1/employee_documents?id=eq.${encodeURIComponent(docId)}`,
-              {
-                method: 'PATCH',
-                headers: { ...this.authHeaders, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-                body: JSON.stringify({ employee_id: body.employee_id }),
-              }
-            ).then((r) => {
-              // Nicht-blockierend, aber nicht stumm: ohne Verknuepfung fehlt das Dokument in der Akte (SW-4)
-              if (!r || !r.ok) console.error('[dokument-upload] Verknuepfung Dokument/Person fehlgeschlagen:', r && r.status);
-            }).catch(() => console.error('[dokument-upload] Verknuepfung Dokument/Person: Netzwerkfehler'));
+            const z = await dokumentZuordnen({
+              authedFetch: this.authedFetch, baseUrl: this.baseUrl, headers: this.authHeaders,
+              docId, employeeId: body.employee_id,
+            });
+            if (!z.ok) this.zuordnungError = z.satz;
           }
         } else {
           const msg = String((body && (body.error || body.message)) || `HTTP ${res.status}`);
