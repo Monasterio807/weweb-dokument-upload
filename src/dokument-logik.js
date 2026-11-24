@@ -219,7 +219,7 @@ export function uploadFehlerText(status, meldung) {
 // A-013 G5b-15: Nach dem Vertrags-Import muss das Dokument der Person zugeordnet werden.
 // Das PATCH wird abgewartet. Scheitert es, bekommt die Kundin einen festen Satz (nie Rohtext);
 // im Log steht nur der Statuscode.
-export const MSG_ZUORDNUNG_FEHLT = 'Das Dokument konnte der Akte nicht zugeordnet werden. Du kannst es in der Akte neu ablegen.';
+export const MSG_ZUORDNUNG_FEHLT = 'Das Dokument ist nicht in der Akte gelandet. Du kannst es erneut zuordnen oder in der Akte ablegen.';
 
 export async function dokumentZuordnen({ authedFetch, baseUrl, headers, docId, employeeId }) {
   try {
@@ -237,4 +237,10 @@ export async function dokumentZuordnen({ authedFetch, baseUrl, headers, docId, e
     console.warn('[dokument-upload] Zuordnung Dokument/Person: Netzfehler');
   }
   return { ok: false, satz: MSG_ZUORDNUNG_FEHLT };
+}
+
+// Erfolgstitel nach dem Import; solange die Zuordnung offen ist, nicht «fertig» melden.
+export function importTitel({ created, zuordnungOffen }) {
+  const basis = 'Mitarbeiter ' + (created ? 'angelegt' : 'aktualisiert');
+  return zuordnungOffen ? basis + ', Dokument noch nicht zugeordnet' : basis;
 }

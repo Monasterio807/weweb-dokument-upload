@@ -203,7 +203,7 @@
                     <circle cx="12" cy="12" r="9" />
                     <polyline points="8 12.5 11 15.5 16 9.5" />
                   </svg>
-                  Mitarbeiter {{ importResult.employee_created ? 'angelegt' : 'aktualisiert' }}
+                  {{ titelImport({ created: importResult.employee_created, zuordnungOffen: !!zuordnungError }) }}
                 </p>
                 <p v-if="importResult.employee_created" class="hrk-muted">
                   Onboarding-Checkliste gestartet.
@@ -219,7 +219,10 @@
                     {{ w }}
                   </li>
                 </ul>
-                <p v-if="zuordnungError" class="hrk-field-error" role="alert">{{ zuordnungError }}</p>
+                <div v-if="zuordnungError" class="zuordnung-fehler">
+                  <p class="hrk-field-error" role="alert">{{ zuordnungError }}</p>
+                  <button type="button" class="du-fw" :disabled="zuordnungLaeuft" :aria-busy="zuordnungLaeuft ? 'true' : null" @click="erneutZuordnen">Erneut zuordnen</button>
+                </div>
                 <div v-if="importResult.employee_id" class="auto-result-card__act">
                   <a :href="`/mitarbeiter-detail?id=${importResult.employee_id}`" class="du-lk">Mitarbeiter öffnen</a>
                 </div>
@@ -427,6 +430,7 @@ import {
   sichererDateiname,
   uploadFehlerText,
   dokumentZuordnen,
+  importTitel,
 } from './dokument-logik.js';
 
 // Stil A (Entscheid 13.10.2026): Gloock (Titel) und Archivo (Labels) nachladen, weil die App-Seite sie nicht von selbst
@@ -488,6 +492,8 @@ export default {
       importResult: null,
       importError: '',
       zuordnungError: '',
+      zuordnungLaeuft: false,
+      zuordnungDocId: null,
       // Versicherungs-Extraktion (SUVA/KTG/BVG-Police)
       extractLoading: false,
       extractResult: null,
@@ -599,6 +605,8 @@ export default {
   },
 
   methods: {
+    titelImport(a) { return importTitel(a); },
+
     // ── Infrastruktur ────────────────────────────────────────────────────────
 
     /** fetch mit Timeout — bricht hängende Requests nach ms ab */
@@ -845,6 +853,7 @@ export default {
       this.importResult = null;
       this.importError = '';
       this.zuordnungError = '';
+      this.zuordnungDocId = null;
       this.extractResult = null;
       this.extractError = '';
 
@@ -1108,6 +1117,7 @@ export default {
       this.importLoading = true;
       this.importError  = '';
       this.zuordnungError = '';
+      this.zuordnungDocId = null;
       this.importResult = null;
       try {
         const file_base64 = await this.fileToBase64(file);
@@ -1138,7 +1148,7 @@ export default {
               authedFetch: (...a) => this.authedFetch(...a), baseUrl: this.baseUrl, headers: this.authHeaders,
               docId, employeeId: body.employee_id,
             });
-            if (!z.ok) this.zuordnungError = z.satz;
+            if (!z.ok) { this.zuordnungError = z.satz; this.zuordnungDocId = docId; }
           }
         } else {
           const msg = String((body && (body.error || body.message)) || `HTTP ${res.status}`);
@@ -1152,6 +1162,21 @@ export default {
         }
       } finally {
         this.importLoading = false;
+      }
+    },
+
+    /** Zuordnung Dokument/Person nochmal versuchen; bei Erfolg verschwindet der Satz. */
+    async erneutZuordnen() {
+      if (this.zuordnungLaeuft || !this.zuordnungDocId || !this.importResult || !this.importResult.employee_id) return;
+      this.zuordnungLaeuft = true;
+      try {
+        const z = await dokumentZuordnen({
+          authedFetch: (...a) => this.authedFetch(...a), baseUrl: this.baseUrl, headers: this.authHeaders,
+          docId: this.zuordnungDocId, employeeId: this.importResult.employee_id,
+        });
+        this.zuordnungError = z.ok ? '' : z.satz;
+      } finally {
+        this.zuordnungLaeuft = false;
       }
     },
 
@@ -1507,6 +1532,7 @@ export default {
   flex-direction: column;
   gap: var(--hrk-space-1);
 }
+.zuordnung-fehler { margin-top: var(--hrk-space-2); }
 .auto-result-card__act { margin-top: var(--hrk-space-2); }
 
 /* ── Modal: Papier, Haarlinie, kein Schatten ─────────────── */

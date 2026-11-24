@@ -22,6 +22,7 @@ import {
   sichererDateiname,
   uploadFehlerText,
   MSG_ZUORDNUNG_FEHLT,
+  importTitel,
   dokumentZuordnen,
 } from './dokument-logik.js';
 
@@ -270,6 +271,18 @@ describe('dokumentZuordnen (G5b-15)', () => {
     warn.mockRestore();
   });
   it('MSG_ZUORDNUNG_FEHLT ist ein Du-Satz', () => {
-    expect(MSG_ZUORDNUNG_FEHLT).toBe('Das Dokument konnte der Akte nicht zugeordnet werden. Du kannst es in der Akte neu ablegen.');
+    expect(MSG_ZUORDNUNG_FEHLT).toBe('Das Dokument ist nicht in der Akte gelandet. Du kannst es erneut zuordnen oder in der Akte ablegen.');
+  });
+});
+
+// A-013 Nachbesserung: Erfolgstitel abschwaechen, solange die Zuordnung offen ist.
+describe('importTitel', () => {
+  it('Zuordnung ok: klarer Erfolgstitel', () => {
+    expect(importTitel({ created: true, zuordnungOffen: false })).toBe('Mitarbeiter angelegt');
+    expect(importTitel({ created: false, zuordnungOffen: false })).toBe('Mitarbeiter aktualisiert');
+  });
+  it('Zuordnung offen: abgeschwaecht, nicht «fertig»', () => {
+    expect(importTitel({ created: true, zuordnungOffen: true })).toBe('Mitarbeiter angelegt, Dokument noch nicht zugeordnet');
+    expect(importTitel({ created: false, zuordnungOffen: true })).toBe('Mitarbeiter aktualisiert, Dokument noch nicht zugeordnet');
   });
 });
